@@ -1,175 +1,194 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>My Improved Snippet Site</title>
+  <meta charset="UTF-8" />
+  <title>My Snippet App (Firebase)</title>
   <style>
-    /* Piccolo reset */
-    * {
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box;
-    }
-
     body {
-      background: #f0f2f5;
-      font-family: Arial, sans-serif;
+      font-family: sans-serif; 
+      background: #f0f0f0; 
       padding: 20px;
     }
-
     .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
+      max-width: 600px; 
+      margin: 0 auto; 
+      background: #fff; 
+      padding: 20px; 
       border-radius: 8px;
     }
-
     h1 {
       text-align: center;
-      margin-bottom: 1rem;
     }
-
-    /* Form Aggiunta Snippet */
-    .form-section h2 {
-      margin-bottom: 1rem;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
     label {
-      display: block;
-      margin-bottom: 0.3rem;
       font-weight: bold;
     }
-
-    input[type="text"],
-    textarea {
-      width: 100%;
-      padding: 0.5rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    input, textarea {
+      width: 100%; 
+      margin: 8px 0; 
+      padding: 8px; 
+      box-sizing: border-box;
     }
-
-    textarea {
-      resize: vertical;
-    }
-
     button {
-      background: #28a745;
-      color: #fff;
-      padding: 0.6rem 1.2rem;
-      border: none;
+      margin: 8px 0; 
+      padding: 8px 16px; 
+      cursor: pointer; 
+      background: #28a745; 
+      color: #fff; 
+      border: none; 
       border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-      margin: 0.5rem 0;
     }
-
     button:hover {
       background: #218838;
     }
-
-    /* Sezione Ricerca */
-    .search-section {
-      margin-bottom: 2rem;
+    hr {
+      margin: 20px 0;
     }
-
-    .search-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
+    ul {
+      list-style: none; 
+      padding-left: 0;
     }
-
-    .search-row input {
-      flex: 1;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-
-    .results {
-      margin-top: 1rem;
-    }
-
-    /* Card snippet */
-    .card {
-      background: #fafafa;
+    li {
+      background: #fafafa; 
+      margin-bottom: 8px; 
+      padding: 8px; 
+      border-radius: 4px; 
       border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      position: relative;
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #007bff;
-      margin-bottom: 0.3rem;
-      cursor: pointer; /* Indichiamo che è cliccabile per copiare codice */
-    }
-
-    .card-desc {
-      font-style: italic;
-      margin-bottom: 0.5rem;
-    }
-
-    .card-code {
-      font-family: monospace;
-      white-space: pre-wrap;
-      background: #fdfdfd;
-      padding: 0.5rem;
-      border-radius: 4px;
-      border: 1px solid #eee;
-    }
-
-    .msg {
-      color: #666;
-      margin: 0.5rem 0;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>My Improved Snippet Site</h1>
+    <h1>My Snippet App</h1>
 
-    <!-- Sezione Ricerca Snippet -->
-    <div class="search-section">
-      <h2>Cerca snippet</h2>
-      <div class="search-row">
-        <input type="text" id="searchKey" placeholder="Inserisci parola chiave..." />
-        <button onclick="searchSnippets()">Cerca</button>
-      </div>
-      <div id="searchResults" class="results"></div>
-      <p class="msg" id="searchMsg"></p>
-    </div>
+    <h2>Aggiungi snippet</h2>
+    <label for="title">Titolo:</label>
+    <input type="text" id="title" />
+
+    <label for="code">Codice:</label>
+    <textarea id="code" rows="4"></textarea>
+
+    <button onclick="addSnippet()">Salva snippet</button>
+    <p id="infoAdd" style="color: green;"></p>
 
     <hr>
 
-    <!-- Sezione Form Aggiunta Snippet -->
-    <div class="form-section">
-      <h2>Aggiungi Snippet</h2>
-      <div class="form-group">
-        <label for="title">Titolo</label>
-        <input type="text" id="title" placeholder="Esempio: getDoubleSignal" />
-      </div>
-      <div class="form-group">
-        <label for="description">Descrizione</label>
-        <input type="text" id="description" placeholder="Breve descrizione..." />
-      </div>
-      <div class="form-group">
-        <label for="code">Codice</label>
-        <textarea id="code" rows="4" placeholder="Incolla qui il codice..."></textarea>
-      </div>
-      <button onclick="addSnippet()">Inserisci</button>
-      <p class="msg" id="insertMsg"></p>
-    </div>
+    <h2>Elenco snippet</h2>
+    <button onclick="loadSnippets()">Carica snippet</button>
+    <ul id="snippetList"></ul>
+
   </div>
 
-  <!-- Includiamo il JS -->
-  <script src="script.js"></script>
+ // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
+  authDomain: "my-snippet-project-a84b5.firebaseapp.com",
+  projectId: "my-snippet-project-a84b5",
+  storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
+  messagingSenderId: "775794283075",
+  appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+    import { 
+      initializeApp 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      getDocs 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    /*
+      2) La tua configurazione Firebase (copia i dati REALI dal tuo progetto).
+         Quella che hai postato tu è tipo:
+         {
+            apiKey: "...",
+            authDomain: "...",
+            projectId: "...",
+            storageBucket: "...",
+            messagingSenderId: "...",
+            appId: "..."
+         }
+    */
+    const firebaseConfig = {
+      apiKey: "TUO_API_KEY",
+      authDomain: "TUO_PROJECT_ID.firebaseapp.com",
+      projectId: "TUO_PROJECT_ID",
+      storageBucket: "TUO_PROJECT_ID.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdefghijk"
+    };
+
+    // 3) Inizializziamo l'app Firebase
+    const app = initializeApp(firebaseConfig);
+
+    // 4) Otteniamo l'oggetto Firestore
+    const db = getFirestore(app);
+
+    // 5) Funzione per AGGIUNGERE uno snippet
+    window.addSnippet = async function() {
+      const titleField = document.getElementById('title');
+      const codeField = document.getElementById('code');
+      const infoAdd = document.getElementById('infoAdd');
+
+      const title = titleField.value.trim();
+      const code = codeField.value.trim();
+
+      if (!title || !code) {
+        infoAdd.style.color = "red";
+        infoAdd.textContent = "Inserisci almeno un titolo e del codice!";
+        return;
+      }
+
+      try {
+        // addDoc -> aggiunge un documento nella collezione "snippets"
+        await addDoc(collection(db, "snippets"), {
+          title: title,
+          code: code,
+          createdAt: new Date()
+        });
+        infoAdd.style.color = "green";
+        infoAdd.textContent = "Snippet salvato con successo!";
+        titleField.value = "";
+        codeField.value = "";
+      } catch (err) {
+        console.error("Errore salvataggio:", err);
+        infoAdd.style.color = "red";
+        infoAdd.textContent = "Errore durante il salvataggio!";
+      }
+    };
+
+    // 6) Funzione per CARICARE tutti gli snippet
+    window.loadSnippets = async function() {
+      const snippetList = document.getElementById('snippetList');
+      snippetList.innerHTML = "";
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "snippets"));
+        if (querySnapshot.empty) {
+          snippetList.innerHTML = "<li>Nessuno snippet presente.</li>";
+          return;
+        }
+
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${data.title}</strong><br><pre>${data.code}</pre>`;
+          snippetList.appendChild(li);
+        });
+      } catch (err) {
+        console.error("Errore lettura:", err);
+        snippetList.innerHTML = "<li style='color:red'>Errore durante il caricamento.</li>";
+      }
+    };
+  </script>
 </body>
 </html>
