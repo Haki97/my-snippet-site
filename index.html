@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>My Snippet Site</title>
+</head>
+<body>
+  <h1>My Snippet Site</h1>
+  
+  <!-- Sezione per Aggiungere snippet -->
+  <h2>Aggiungi snippet</h2>
+  <label for="title">Titolo:</label>
+  <input type="text" id="title" />
+  <br><br>
+
+  <label for="code">Codice:</label>
+  <textarea id="code" rows="4" cols="50"></textarea>
+  <br><br>
+
+  <button onclick="addSnippet()">Salva snippet</button>
+
+  <hr>
+
+  <!-- Sezione per cercare snippet -->
+  <h2>Cerca snippet</h2>
+  <label for="searchKey">Parola chiave:</label>
+  <input type="text" id="searchKey" />
+  <button onclick="searchSnippets()">Cerca</button>
+
+  <ul id="results"></ul>
+
+  <!-- Includiamo il file script.js -->
+  <script src="script.js"></script>
+</body>
+</html>
