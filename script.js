@@ -1,120 +1,178 @@
-// Nome della chiave in localStorage
-const STORAGE_KEY = 'snippetList';
+/***********************************************
+ * 1) IMPORT E CONFIGURAZIONE FIREBASE
+ ***********************************************/
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 
-// Carica snippet da localStorage (ritorna array)
-function loadSnippets() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return saved ? JSON.parse(saved) : [];
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+/* Sostituisci con i TUOI valori da "Project settings" -> "Config" */
+const firebaseConfig = {
+  apiKey: "TUO_API_KEY",
+  authDomain: "TUO_PROJECT_ID.firebaseapp.com",
+  projectId: "TUO_PROJECT_ID",
+  storageBucket: "TUO_PROJECT_ID.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:abcdefgh"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+/***********************************************
+ * 2) VARIABILI GLOBALI
+ ***********************************************/
+let snippetArray = [];  // qui manteniamo in memoria tutti gli snippet
+
+/***********************************************
+ * 3) TOGGLE SIDEBAR
+ ***********************************************/
+window.toggleSidebar = function() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('hidden');
+};
+
+/***********************************************
+ * 4) CARICAMENTO SNIPPET (LETTURA)
+ ***********************************************/
+async function loadAllSnippets() {
+  snippetArray = []; // svuotiamo l'array
+
+  const snapshot = await getDocs(collection(db, "snippets"));
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    snippetArray.push({
+      id: doc.id,
+      title: data.title || "",
+      description: data.description || "",
+      code: data.code || "",
+      createdAt: data.createdAt
+    });
+  });
 }
 
-// Salva un array di snippet in localStorage
-function saveSnippets(snippets) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
+/* Aggiorna l'indice nella sidebar */
+function updateSidebar() {
+  const snippetIndex = document.getElementById('snippetIndex');
+  snippetIndex.innerHTML = "";
+
+  snippetArray.forEach(sn => {
+    const li = document.createElement('li');
+    li.textContent = sn.title || "[Senza titolo]";
+    li.addEventListener('click', () => showSnippetDetail(sn));
+    snippetIndex.appendChild(li);
+  });
 }
 
-// Aggiungi un nuovo snippet
-function addSnippet() {
-  const titleField = document.getElementById('title');
-  const descField = document.getElementById('description');
-  const codeField = document.getElementById('code');
-  const insertMsg = document.getElementById('insertMsg');
+/* Mostra un singolo snippet al centro (in #searchResults) */
+function showSnippetDetail(snippet) {
+  const resultsDiv = document.getElementById('searchResults');
+  resultsDiv.innerHTML = `
+    <h2>${snippet.title}</h2>
+    <p><em>${snippet.description}</em></p>
+    <pre>${snippet.code}</pre>
+  `;
+}
 
-  const title = titleField.value.trim();
-  const description = descField.value.trim();
-  const code = codeField.value.trim();
+/***********************************************
+ * 5) RICERCA LOCALE
+ ***********************************************/
+window.searchLocal = function() {
+  const input = document.getElementById('searchInput').value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('searchResults');
+  resultsDiv.innerHTML = "";
 
-  if (!title || !code) {
-    insertMsg.textContent = 'Devi almeno inserire un titolo e del codice!';
+  if (!input) {
+    resultsDiv.innerHTML = "<p>Inserisci una parola chiave per cercare.</p>";
     return;
   }
 
-  const snippet = {
-    title,
-    description,
-    code
-  };
-
-  // Carica gli snippet già esistenti
-  const snippets = loadSnippets();
-  // Aggiungi il nuovo
-  snippets.push(snippet);
-  // Salva tutto
-  saveSnippets(snippets);
-
-  // Messaggio di conferma
-  insertMsg.textContent = 'Snippet salvato correttamente!';
-  
-  // Svuota i campi
-  titleField.value = '';
-  descField.value = '';
-  codeField.value = '';
-}
-
-// Ricerca snippet
-function searchSnippets() {
-  const key = document.getElementById('searchKey').value.trim().toLowerCase();
-  const searchResults = document.getElementById('searchResults');
-  const searchMsg = document.getElementById('searchMsg');
-
-  searchResults.innerHTML = '';
-  searchMsg.textContent = '';
-
-  if (!key) {
-    searchMsg.textContent = 'Inserisci una parola chiave per cercare.';
-    return;
-  }
-
-  const snippets = loadSnippets();
-  // Filtra snippet
-  const filtered = snippets.filter(sn => {
+  const filtered = snippetArray.filter(sn => {
     return (
-      sn.title.toLowerCase().includes(key) ||
-      (sn.description && sn.description.toLowerCase().includes(key)) ||
-      sn.code.toLowerCase().includes(key)
+      sn.title.toLowerCase().includes(input) ||
+      sn.description.toLowerCase().includes(input) ||
+      sn.code.toLowerCase().includes(input)
     );
   });
 
   if (filtered.length === 0) {
-    searchMsg.textContent = 'Nessun snippet trovato.';
+    resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
     return;
   }
 
-  // Costruisce card per ogni snippet
-  filtered.forEach(snippet => {
-    // Creiamo un div card
-    const card = document.createElement('div');
-    card.classList.add('card');
-    
-    // Titolo (cliccabile -> copia codice)
-    const titleEl = document.createElement('div');
-    titleEl.classList.add('card-title');
-    titleEl.textContent = snippet.title;
-    titleEl.addEventListener('click', () => copyCode(snippet.code));
-
-    // Descrizione
-    const descEl = document.createElement('div');
-    descEl.classList.add('card-desc');
-    descEl.textContent = snippet.description || '';
-
-    // Codice
-    const codeEl = document.createElement('div');
-    codeEl.classList.add('card-code');
-    codeEl.textContent = snippet.code;
-
-    // Assembliamo la card
-    card.appendChild(titleEl);
-    if (snippet.description) {
-      card.appendChild(descEl);
-    }
-    card.appendChild(codeEl);
-
-    searchResults.appendChild(card);
+  filtered.forEach(sn => {
+    const snippetElem = document.createElement('div');
+    snippetElem.innerHTML = `
+      <h3>${sn.title}</h3>
+      <p><em>${sn.description}</em></p>
+      <pre>${sn.code}</pre>
+      <hr>
+    `;
+    resultsDiv.appendChild(snippetElem);
   });
-}
+};
 
-// Copia il codice negli appunti
-function copyCode(text) {
-  navigator.clipboard.writeText(text)
-    .then(() => alert('Codice copiato negli appunti!'))
-    .catch(err => console.error('Errore copia:', err));
-}
+/***********************************************
+ * 6) INSERIMENTO SNIPPET (SCRITTURA)
+ ***********************************************/
+window.addSnippet = async function() {
+  const titleField       = document.getElementById('title');
+  const descriptionField = document.getElementById('description');
+  const codeField        = document.getElementById('code');
+  const infoAdd          = document.getElementById('infoAdd');
+
+  const title       = titleField.value.trim();
+  const description = descriptionField.value.trim();
+  const code        = codeField.value.trim();
+
+  if (!title || !code) {
+    infoAdd.style.color = "red";
+    infoAdd.textContent = "Inserisci almeno un titolo e del codice!";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "snippets"), {
+      title,
+      description,
+      code,
+      createdAt: new Date()
+    });
+    infoAdd.style.color = "green";
+    infoAdd.textContent = "Snippet salvato con successo!";
+
+    // Svuota campi
+    titleField.value       = "";
+    descriptionField.value = "";
+    codeField.value        = "";
+
+    // Ricarichiamo i dati e aggiorniamo sidebar
+    await loadAllSnippets();
+    updateSidebar();
+
+  } catch (err) {
+    console.error("Errore salvataggio:", err);
+    infoAdd.style.color = "red";
+    infoAdd.textContent = "Errore durante il salvataggio!";
+  }
+};
+
+/***********************************************
+ * 7) AVVIO INIZIALE
+ ***********************************************/
+(async function start() {
+  try {
+    // Carichiamo tutti gli snippet dal DB
+    await loadAllSnippets();
+    // Aggiorniamo la sidebar
+    updateSidebar();
+  } catch (err) {
+    console.error("Errore iniziale:", err);
+  }
+})();
