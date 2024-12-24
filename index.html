@@ -75,26 +75,14 @@
     <h2>Elenco snippet</h2>
     <button onclick="loadSnippets()">Carica snippet</button>
     <ul id="snippetList"></ul>
-
   </div>
 
- // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
-  authDomain: "my-snippet-project-a84b5.firebaseapp.com",
-  projectId: "my-snippet-project-a84b5",
-  storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
-  messagingSenderId: "775794283075",
-  appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+  <!-- Qui sotto: un unico script con type="module" e i tuoi import da CDN -->
+  <script type="module">
+    /* 
+      1) Importiamo le funzioni ES Modules direttamente dal CDN di Firebase
+         (senza npm install). 
+    */
     import { 
       initializeApp 
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
@@ -107,24 +95,16 @@ const app = initializeApp(firebaseConfig);
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     /*
-      2) La tua configurazione Firebase (copia i dati REALI dal tuo progetto).
-         Quella che hai postato tu è tipo:
-         {
-            apiKey: "...",
-            authDomain: "...",
-            projectId: "...",
-            storageBucket: "...",
-            messagingSenderId: "...",
-            appId: "..."
-         }
+      2) Configurazione Firebase (usa i TUOI dati reali, 
+         presi dalla console di Firebase -> Project settings -> Config)
     */
     const firebaseConfig = {
-      apiKey: "TUO_API_KEY",
-      authDomain: "TUO_PROJECT_ID.firebaseapp.com",
-      projectId: "TUO_PROJECT_ID",
-      storageBucket: "TUO_PROJECT_ID.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234567890:web:abcdefghijk"
+      apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
+      authDomain: "my-snippet-project-a84b5.firebaseapp.com",
+      projectId: "my-snippet-project-a84b5",
+      storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
+      messagingSenderId: "775794283075",
+      appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
     };
 
     // 3) Inizializziamo l'app Firebase
