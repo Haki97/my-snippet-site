@@ -208,8 +208,190 @@
     </div>
   </div>
 
-  <!-- SCRIPT -->
-  <!-- Carichiamo le librerie Firebase e poi il nostro script.js in modalità module -->
-  <script type="module" src="script.js"></script>
+  <!-- SCRIPT UNICO -->
+  <script type="module">
+    /***********************************************
+     * 1) IMPORT E CONFIGURAZIONE FIREBASE
+     ***********************************************/
+    import { 
+      initializeApp 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      getDocs 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    // I TUOI DATI DI CONFIGURAZIONE (DALLO SNIPPET CHE HAI POSTATO)
+    const firebaseConfig = {
+      apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
+      authDomain: "my-snippet-project-a84b5.firebaseapp.com",
+      projectId: "my-snippet-project-a84b5",
+      storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
+      messagingSenderId: "775794283075",
+      appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
+    };
+
+    // Inizializza Firebase
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    /***********************************************
+     * 2) VARIABILI GLOBALI
+     ***********************************************/
+    let snippetArray = [];  // Manteniamo in memoria tutti gli snippet
+
+    /***********************************************
+     * 3) TOGGLE SIDEBAR
+     ***********************************************/
+    window.toggleSidebar = function() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('hidden');
+    };
+
+    /***********************************************
+     * 4) CARICAMENTO SNIPPET (LETTURA)
+     ***********************************************/
+    async function loadAllSnippets() {
+      snippetArray = []; // Svuotiamo l'array locale
+      const snapshot = await getDocs(collection(db, "snippets"));
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        snippetArray.push({
+          id: doc.id,
+          title: data.title || "",
+          description: data.description || "",
+          code: data.code || "",
+          createdAt: data.createdAt
+        });
+      });
+    }
+
+    // Aggiorna l'indice nella sidebar
+    function updateSidebar() {
+      const snippetIndex = document.getElementById('snippetIndex');
+      snippetIndex.innerHTML = "";
+
+      snippetArray.forEach(sn => {
+        const li = document.createElement('li');
+        li.textContent = sn.title || "[Senza titolo]";
+        // Cliccando sul li -> mostra snippet detail
+        li.addEventListener('click', () => showSnippetDetail(sn));
+        snippetIndex.appendChild(li);
+      });
+    }
+
+    // Mostra un singolo snippet al centro
+    function showSnippetDetail(snippet) {
+      const resultsDiv = document.getElementById('searchResults');
+      resultsDiv.innerHTML = `
+        <h2>${snippet.title}</h2>
+        <p><em>${snippet.description}</em></p>
+        <pre>${snippet.code}</pre>
+      `;
+    }
+
+    /***********************************************
+     * 5) RICERCA LOCALE
+     ***********************************************/
+    window.searchLocal = function() {
+      const input = document.getElementById('searchInput').value.trim().toLowerCase();
+      const resultsDiv = document.getElementById('searchResults');
+      resultsDiv.innerHTML = "";
+
+      if (!input) {
+        resultsDiv.innerHTML = "<p>Inserisci una parola chiave per cercare.</p>";
+        return;
+      }
+
+      // Filtra snippet in base a title, description, code
+      const filtered = snippetArray.filter(sn => {
+        return (
+          sn.title.toLowerCase().includes(input) ||
+          sn.description.toLowerCase().includes(input) ||
+          sn.code.toLowerCase().includes(input)
+        );
+      });
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
+        return;
+      }
+
+      // Mostriamo i risultati
+      filtered.forEach(sn => {
+        const snippetElem = document.createElement('div');
+        snippetElem.innerHTML = `
+          <h3>${sn.title}</h3>
+          <p><em>${sn.description}</em></p>
+          <pre>${sn.code}</pre>
+          <hr>
+        `;
+        resultsDiv.appendChild(snippetElem);
+      });
+    };
+
+    /***********************************************
+     * 6) INSERIMENTO SNIPPET (SCRITTURA)
+     ***********************************************/
+    window.addSnippet = async function() {
+      const titleField       = document.getElementById('title');
+      const descriptionField = document.getElementById('description');
+      const codeField        = document.getElementById('code');
+      const infoAdd          = document.getElementById('infoAdd');
+
+      const title       = titleField.value.trim();
+      const description = descriptionField.value.trim();
+      const code        = codeField.value.trim();
+
+      if (!title || !code) {
+        infoAdd.style.color = "red";
+        infoAdd.textContent = "Inserisci almeno un titolo e del codice!";
+        return;
+      }
+
+      try {
+        // Aggiunge un doc nella collezione "snippets"
+        await addDoc(collection(db, "snippets"), {
+          title,
+          description,
+          code,
+          createdAt: new Date()
+        });
+        infoAdd.style.color = "green";
+        infoAdd.textContent = "Snippet salvato con successo!";
+
+        // Svuota i campi
+        titleField.value       = "";
+        descriptionField.value = "";
+        codeField.value        = "";
+
+        // Ricarichiamo i dati e aggiorniamo la sidebar
+        await loadAllSnippets();
+        updateSidebar();
+
+      } catch (err) {
+        console.error("Errore salvataggio:", err);
+        infoAdd.style.color = "red";
+        infoAdd.textContent = "Errore durante il salvataggio!";
+      }
+    };
+
+    /***********************************************
+     * 7) AVVIO INIZIALE
+     ***********************************************/
+    (async function start() {
+      try {
+        // Carichiamo tutti gli snippet dal DB
+        await loadAllSnippets();
+        // Aggiorniamo la sidebar
+        updateSidebar();
+      } catch (err) {
+        console.error("Errore iniziale:", err);
+      }
+    })();
+  </script>
 </body>
 </html>
