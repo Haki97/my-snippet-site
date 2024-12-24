@@ -1,83 +1,120 @@
-// Nome della chiave da usare in localStorage
-const SNIPPETS_KEY = 'mysnippets';
+// Nome della chiave in localStorage
+const STORAGE_KEY = 'snippetList';
 
-// Questa funzione carica tutti gli snippet salvati in localStorage
+// Carica snippet da localStorage (ritorna array)
 function loadSnippets() {
-  const saved = localStorage.getItem(SNIPPETS_KEY);
-  if (!saved) {
-    return []; // Se non c'è nulla, restituiamo un array vuoto
-  }
-  // Se c'è, convertiamo da stringa JSON a array
-  return JSON.parse(saved);
+  const saved = localStorage.getItem(STORAGE_KEY);
+  return saved ? JSON.parse(saved) : [];
 }
 
-// Questa funzione salva un array di snippet in localStorage
+// Salva un array di snippet in localStorage
 function saveSnippets(snippets) {
-  localStorage.setItem(SNIPPETS_KEY, JSON.stringify(snippets));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
 }
 
-// Funzione chiamata quando clicchi "Salva snippet"
+// Aggiungi un nuovo snippet
 function addSnippet() {
   const titleField = document.getElementById('title');
+  const descField = document.getElementById('description');
   const codeField = document.getElementById('code');
+  const insertMsg = document.getElementById('insertMsg');
 
   const title = titleField.value.trim();
+  const description = descField.value.trim();
   const code = codeField.value.trim();
 
   if (!title || !code) {
-    alert('Inserisci almeno un titolo e del codice.');
+    insertMsg.textContent = 'Devi almeno inserire un titolo e del codice!';
     return;
   }
 
-  // Carica snippet esistenti
+  const snippet = {
+    title,
+    description,
+    code
+  };
+
+  // Carica gli snippet già esistenti
   const snippets = loadSnippets();
-
-  // Aggiunge il nuovo snippet
-  snippets.push({
-    title: title,
-    code: code
-  });
-
-  // Salva di nuovo in localStorage
+  // Aggiungi il nuovo
+  snippets.push(snippet);
+  // Salva tutto
   saveSnippets(snippets);
 
-  alert('Snippet salvato con successo!');
-
+  // Messaggio di conferma
+  insertMsg.textContent = 'Snippet salvato correttamente!';
+  
   // Svuota i campi
   titleField.value = '';
+  descField.value = '';
   codeField.value = '';
 }
 
-// Funzione per cercare snippet in base a parola chiave
+// Ricerca snippet
 function searchSnippets() {
   const key = document.getElementById('searchKey').value.trim().toLowerCase();
-  const resultsList = document.getElementById('results');
+  const searchResults = document.getElementById('searchResults');
+  const searchMsg = document.getElementById('searchMsg');
 
-  // Svuotiamo la lista
-  resultsList.innerHTML = '';
+  searchResults.innerHTML = '';
+  searchMsg.textContent = '';
 
   if (!key) {
-    alert('Inserisci almeno una parola chiave');
+    searchMsg.textContent = 'Inserisci una parola chiave per cercare.';
     return;
   }
 
   const snippets = loadSnippets();
-
-  // Filtra snippet che contengono la parola chiave nel titolo o nel codice
-  const filtered = snippets.filter(snippet =>
-    snippet.title.toLowerCase().includes(key) ||
-    snippet.code.toLowerCase().includes(key)
-  );
+  // Filtra snippet
+  const filtered = snippets.filter(sn => {
+    return (
+      sn.title.toLowerCase().includes(key) ||
+      (sn.description && sn.description.toLowerCase().includes(key)) ||
+      sn.code.toLowerCase().includes(key)
+    );
+  });
 
   if (filtered.length === 0) {
-    resultsList.innerHTML = '<li>Nessun snippet trovato</li>';
+    searchMsg.textContent = 'Nessun snippet trovato.';
     return;
   }
 
-  // Mostriamo i risultati
+  // Costruisce card per ogni snippet
   filtered.forEach(snippet => {
-    const li = document.createElement('li');
-    li.innerHTML = `<b>${snippet.title}</b>: <pre>${snippet.code}</pre>`;
-    resultsList.appendChild(li);
+    // Creiamo un div card
+    const card = document.createElement('div');
+    card.classList.add('card');
+    
+    // Titolo (cliccabile -> copia codice)
+    const titleEl = document.createElement('div');
+    titleEl.classList.add('card-title');
+    titleEl.textContent = snippet.title;
+    titleEl.addEventListener('click', () => copyCode(snippet.code));
+
+    // Descrizione
+    const descEl = document.createElement('div');
+    descEl.classList.add('card-desc');
+    descEl.textContent = snippet.description || '';
+
+    // Codice
+    const codeEl = document.createElement('div');
+    codeEl.classList.add('card-code');
+    codeEl.textContent = snippet.code;
+
+    // Assembliamo la card
+    card.appendChild(titleEl);
+    if (snippet.description) {
+      card.appendChild(descEl);
+    }
+    card.appendChild(codeEl);
+
+    searchResults.appendChild(card);
   });
+}
+
+// Copia il codice negli appunti
+function copyCode(text) {
+  navigator.clipboard.writeText(text)
+    .then(() => alert('Codice copiato negli appunti!'))
+    .catch(err => console.error('Errore copia:', err));
 }
