@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <title>Snippet & EA Library</title>
+  <meta charset="UTF-8">
+  <title>My Advanced Snippet App</title>
   <style>
     /* RESET E LAYOUT DI BASE */
     * {
@@ -69,7 +69,7 @@
      * SEZIONE PRINCIPALE (main)
      ****************************************/
     .main {
-      flex: 1;
+      flex: 1; 
       background: #fff;
       padding: 20px;
       position: relative; /* per il bottone toggle */
@@ -104,41 +104,16 @@
     }
 
     /****************************************
-     * PULSANTI DI SWITCH (SNIPPET / EA)
-     ****************************************/
-    .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-bottom: 2rem;
-    }
-    .action-buttons button {
-      padding: 0.6rem 1.2rem;
-      border: none;
-      background: #2ecc71;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .action-buttons button:hover {
-      background: #27ae60;
-    }
-
-    /****************************************
-     * SEZIONI DEI FORM
+     * FORM INSERIMENTO SNIPPET
      ****************************************/
     .form-section {
-      display: none; /* nascosto di default */
+      margin-top: 2rem;
       max-width: 600px;
-      margin: 0 auto 2rem auto; /* centrato, con margine basso */
+      margin: 2rem auto;
       background: #f9f9f9;
       border: 1px solid #ddd;
       padding: 1rem;
       border-radius: 8px;
-    }
-    .form-section.active {
-      display: block; /* visibile quando attivo */
     }
     .form-section h2 {
       margin-bottom: 1rem;
@@ -162,7 +137,7 @@
     .form-group textarea {
       resize: vertical;
     }
-    .form-section button.save-btn {
+    .form-section button {
       background: #2ecc71;
       color: #fff;
       border: none;
@@ -170,23 +145,13 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    .form-section button.save-btn:hover {
+    .form-section button:hover {
       background: #27ae60;
     }
     .info-msg {
       color: green;
       margin-top: 0.5rem;
       min-height: 1.2rem; 
-    }
-
-    /****************************************
-     * RISULTATI
-     ****************************************/
-    #searchResults {
-      margin: 2rem 0;
-    }
-    #searchResults div {
-      margin-bottom: 1rem;
     }
 
     /****************************************
@@ -204,17 +169,11 @@
   <!-- BOTTONE PER TOGGLE SIDEBAR -->
   <button class="toggle-btn" onclick="toggleSidebar()">Menu</button>
 
-  <!-- SIDEBAR (ELENCO) -->
+  <!-- SIDEBAR (ELENCO SNIPPET) -->
   <div class="sidebar" id="sidebar">
-    <h2>Libreria</h2>
-    <h3>Snippets</h3>
+    <h2>Elenco Snippet</h2>
     <ul id="snippetIndex">
-      <!-- Lista snippet -->
-    </ul>
-    <hr>
-    <h3>EA</h3>
-    <ul id="eaIndex">
-      <!-- Lista EA -->
+      <!-- Lista snippet (indice) -->
     </ul>
   </div>
 
@@ -222,107 +181,81 @@
   <div class="main">
     <!-- BARRA DI RICERCA -->
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Cerca snippet o EA (title, desc, code)..." />
+      <input type="text" id="searchInput" placeholder="Cerca snippet (title, desc, code)..." />
       <button onclick="searchLocal()">Cerca</button>
-    </div>
-
-    <!-- DUE BOTTONI PER SCEGLIERE SEZIONE -->
-    <div class="action-buttons">
-      <button onclick="showSnippetForm()">Aggiungi Snippet</button>
-      <button onclick="showEAForm()">Aggiungi EA</button>
-    </div>
-
-    <!-- FORM INSERIMENTO SNIPPET -->
-    <div class="form-section" id="snippetForm">
-      <h2>Inserisci Nuovo Snippet</h2>
-      <div class="form-group">
-        <label for="titleSnippet">Titolo</label>
-        <input type="text" id="titleSnippet" />
-      </div>
-      <div class="form-group">
-        <label for="descriptionSnippet">Descrizione</label>
-        <input type="text" id="descriptionSnippet" />
-      </div>
-      <div class="form-group">
-        <label for="codeSnippet">Codice</label>
-        <textarea id="codeSnippet" rows="5"></textarea>
-      </div>
-      <button class="save-btn" onclick="addSnippet()">Salva Snippet</button>
-      <div class="info-msg" id="infoAddSnippet"></div>
-    </div>
-
-    <!-- FORM INSERIMENTO EA -->
-    <div class="form-section" id="eaForm">
-      <h2>Inserisci Nuovo EA</h2>
-      <div class="form-group">
-        <label for="titleEA">Titolo</label>
-        <input type="text" id="titleEA" />
-      </div>
-      <div class="form-group">
-        <label for="descriptionEA">Descrizione</label>
-        <input type="text" id="descriptionEA" />
-      </div>
-      <div class="form-group">
-        <label for="codeEA">Codice EA</label>
-        <textarea id="codeEA" rows="5"></textarea>
-      </div>
-      <button class="save-btn" onclick="addEA()">Salva EA</button>
-      <div class="info-msg" id="infoAddEA"></div>
     </div>
 
     <!-- RISULTATI DELLA RICERCA -->
     <div id="searchResults"></div>
+
+    <!-- FORM INSERIMENTO -->
+    <div class="form-section">
+      <h2>Inserisci Nuovo Snippet</h2>
+      <div class="form-group">
+        <label for="title">Titolo</label>
+        <input type="text" id="title" />
+      </div>
+      <div class="form-group">
+        <label for="description">Descrizione</label>
+        <input type="text" id="description" />
+      </div>
+      <div class="form-group">
+        <label for="code">Codice</label>
+        <textarea id="code" rows="5"></textarea>
+      </div>
+      <button onclick="addSnippet()">Salva Snippet</button>
+      <div class="info-msg" id="infoAdd"></div>
+    </div>
   </div>
 
-  <!-- SCRIPT UNICO CON GLI SDK E TUTTA LA LOGICA -->
+  <!-- SCRIPT UNICO -->
   <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "firebase/app";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs
-    } from "firebase/firestore";
+    /***********************************************
+     * 1) IMPORT E CONFIGURAZIONE FIREBASE
+     ***********************************************/
+    import { 
+      initializeApp 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 
-    // Tua configurazione Firebase (quella che hai mandato)
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      getDocs 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    // I TUOI DATI DI CONFIGURAZIONE (DALLO SNIPPET CHE HAI POSTATO)
     const firebaseConfig = {
       apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
       authDomain: "my-snippet-project-a84b5.firebaseapp.com",
       projectId: "my-snippet-project-a84b5",
-      storageBucket: "my-snippet-project-a84b5.firebaseapp.com",
+      storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
       messagingSenderId: "775794283075",
       appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
     };
 
-    // Initialize Firebase
+    // Inizializza Firebase
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // ARRAYS GLOBALI
-    let snippetArray = [];  // Mantiene tutti gli snippet
-    let eaArray      = [];  // Mantiene tutti gli EA
+    /***********************************************
+     * 2) VARIABILI GLOBALI
+     ***********************************************/
+    let snippetArray = [];  // Manteniamo in memoria tutti gli snippet
 
-    // TOGGLE SIDEBAR
+    /***********************************************
+     * 3) TOGGLE SIDEBAR
+     ***********************************************/
     window.toggleSidebar = function() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('hidden');
     };
 
-    // MOSTRA / NASCONDI FORM
-    window.showSnippetForm = function() {
-      document.getElementById('snippetForm').classList.add('active');
-      document.getElementById('eaForm').classList.remove('active');
-    };
-
-    window.showEAForm = function() {
-      document.getElementById('eaForm').classList.add('active');
-      document.getElementById('snippetForm').classList.remove('active');
-    };
-
-    // CARICA TUTTI GLI SNIPPET DA FIRESTORE
+    /***********************************************
+     * 4) CARICAMENTO SNIPPET (LETTURA)
+     ***********************************************/
     async function loadAllSnippets() {
-      snippetArray = [];
+      snippetArray = []; // Svuotiamo l'array locale
       const snapshot = await getDocs(collection(db, "snippets"));
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -336,67 +269,33 @@
       });
     }
 
-    // CARICA TUTTI GLI EA DA FIRESTORE
-    async function loadAllEA() {
-      eaArray = [];
-      const snapshot = await getDocs(collection(db, "ea"));
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        eaArray.push({
-          id: doc.id,
-          title: data.title || "",
-          description: data.description || "",
-          code: data.code || "",
-          createdAt: data.createdAt
-        });
-      });
-    }
-
-    // AGGIORNA SIDEBAR
+    // Aggiorna l'indice nella sidebar
     function updateSidebar() {
       const snippetIndex = document.getElementById('snippetIndex');
-      const eaIndex      = document.getElementById('eaIndex');
       snippetIndex.innerHTML = "";
-      eaIndex.innerHTML      = "";
 
-      // Snippet
       snippetArray.forEach(sn => {
         const li = document.createElement('li');
         li.textContent = sn.title || "[Senza titolo]";
+        // Cliccando sul li -> mostra snippet detail
         li.addEventListener('click', () => showSnippetDetail(sn));
         snippetIndex.appendChild(li);
       });
-
-      // EA
-      eaArray.forEach(ea => {
-        const li = document.createElement('li');
-        li.textContent = ea.title || "[Senza titolo]";
-        li.addEventListener('click', () => showEADetail(ea));
-        eaIndex.appendChild(li);
-      });
     }
 
-    // MOSTRA DETTAGLIO SNIPPET
+    // Mostra un singolo snippet al centro
     function showSnippetDetail(snippet) {
       const resultsDiv = document.getElementById('searchResults');
-      resultsDiv.innerHTML = `
+      resultsDiv.innerHTML = 
         <h2>${snippet.title}</h2>
         <p><em>${snippet.description}</em></p>
         <pre>${snippet.code}</pre>
-      `;
+      ;
     }
 
-    // MOSTRA DETTAGLIO EA
-    function showEADetail(ea) {
-      const resultsDiv = document.getElementById('searchResults');
-      resultsDiv.innerHTML = `
-        <h2>${ea.title}</h2>
-        <p><em>${ea.description}</em></p>
-        <pre>${ea.code}</pre>
-      `;
-    }
-
-    // RICERCA LOCALE (SNIPPET + EA)
+    /***********************************************
+     * 5) RICERCA LOCALE
+     ***********************************************/
     window.searchLocal = function() {
       const input = document.getElementById('searchInput').value.trim().toLowerCase();
       const resultsDiv = document.getElementById('searchResults');
@@ -407,8 +306,8 @@
         return;
       }
 
-      // Filtra snippet
-      const filteredSnippets = snippetArray.filter(sn => {
+      // Filtra snippet in base a title, description, code
+      const filtered = snippetArray.filter(sn => {
         return (
           sn.title.toLowerCase().includes(input) ||
           sn.description.toLowerCase().includes(input) ||
@@ -416,64 +315,32 @@
         );
       });
 
-      // Filtra EA
-      const filteredEA = eaArray.filter(ea => {
-        return (
-          ea.title.toLowerCase().includes(input) ||
-          ea.description.toLowerCase().includes(input) ||
-          ea.code.toLowerCase().includes(input)
-        );
-      });
-
-      // Se non trova nulla
-      if (filteredSnippets.length === 0 && filteredEA.length === 0) {
-        resultsDiv.innerHTML = "<p>Nessun risultato trovato.</p>";
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
         return;
       }
 
-      // Mostra SNIPPET trovati
-      if (filteredSnippets.length > 0) {
-        const snippetHeader = document.createElement('h3');
-        snippetHeader.textContent = "Risultati Snippet:";
-        resultsDiv.appendChild(snippetHeader);
-
-        filteredSnippets.forEach(sn => {
-          const snippetElem = document.createElement('div');
-          snippetElem.innerHTML = `
-            <h4>${sn.title}</h4>
-            <p><em>${sn.description}</em></p>
-            <pre>${sn.code}</pre>
-            <hr>
-          `;
-          resultsDiv.appendChild(snippetElem);
-        });
-      }
-
-      // Mostra EA trovati
-      if (filteredEA.length > 0) {
-        const eaHeader = document.createElement('h3');
-        eaHeader.textContent = "Risultati EA:";
-        resultsDiv.appendChild(eaHeader);
-
-        filteredEA.forEach(ea => {
-          const eaElem = document.createElement('div');
-          eaElem.innerHTML = `
-            <h4>${ea.title}</h4>
-            <p><em>${ea.description}</em></p>
-            <pre>${ea.code}</pre>
-            <hr>
-          `;
-          resultsDiv.appendChild(eaElem);
-        });
-      }
+      // Mostriamo i risultati
+      filtered.forEach(sn => {
+        const snippetElem = document.createElement('div');
+        snippetElem.innerHTML = 
+          <h3>${sn.title}</h3>
+          <p><em>${sn.description}</em></p>
+          <pre>${sn.code}</pre>
+          <hr>
+        ;
+        resultsDiv.appendChild(snippetElem);
+      });
     };
 
-    // INSERISCI NUOVO SNIPPET
+    /***********************************************
+     * 6) INSERIMENTO SNIPPET (SCRITTURA)
+     ***********************************************/
     window.addSnippet = async function() {
-      const titleField       = document.getElementById('titleSnippet');
-      const descriptionField = document.getElementById('descriptionSnippet');
-      const codeField        = document.getElementById('codeSnippet');
-      const infoAdd          = document.getElementById('infoAddSnippet');
+      const titleField       = document.getElementById('title');
+      const descriptionField = document.getElementById('description');
+      const codeField        = document.getElementById('code');
+      const infoAdd          = document.getElementById('infoAdd');
 
       const title       = titleField.value.trim();
       const description = descriptionField.value.trim();
@@ -486,6 +353,7 @@
       }
 
       try {
+        // Aggiunge un doc nella collezione "snippets"
         await addDoc(collection(db, "snippets"), {
           title,
           description,
@@ -500,65 +368,25 @@
         descriptionField.value = "";
         codeField.value        = "";
 
-        // Ricarica e aggiorna sidebar
+        // Ricarichiamo i dati e aggiorniamo la sidebar
         await loadAllSnippets();
         updateSidebar();
+
       } catch (err) {
-        console.error("Errore salvataggio snippet:", err);
+        console.error("Errore salvataggio:", err);
         infoAdd.style.color = "red";
         infoAdd.textContent = "Errore durante il salvataggio!";
       }
     };
 
-    // INSERISCI NUOVO EA
-    window.addEA = async function() {
-      const titleField       = document.getElementById('titleEA');
-      const descriptionField = document.getElementById('descriptionEA');
-      const codeField        = document.getElementById('codeEA');
-      const infoAdd          = document.getElementById('infoAddEA');
-
-      const title       = titleField.value.trim();
-      const description = descriptionField.value.trim();
-      const code        = codeField.value.trim();
-
-      if (!title || !code) {
-        infoAdd.style.color = "red";
-        infoAdd.textContent = "Inserisci almeno un titolo e del codice!";
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "ea"), {
-          title,
-          description,
-          code,
-          createdAt: new Date()
-        });
-        infoAdd.style.color = "green";
-        infoAdd.textContent = "EA salvato con successo!";
-
-        // Svuota i campi
-        titleField.value       = "";
-        descriptionField.value = "";
-        codeField.value        = "";
-
-        // Ricarica e aggiorna sidebar
-        await loadAllEA();
-        updateSidebar();
-      } catch (err) {
-        console.error("Errore salvataggio EA:", err);
-        infoAdd.style.color = "red";
-        infoAdd.textContent = "Errore durante il salvataggio!";
-      }
-    };
-
-    // AVVIO INIZIALE
+    /***********************************************
+     * 7) AVVIO INIZIALE
+     ***********************************************/
     (async function start() {
       try {
-        // Carichiamo snippet & EA
+        // Carichiamo tutti gli snippet dal DB
         await loadAllSnippets();
-        await loadAllEA();
-        // Aggiorniamo sidebar
+        // Aggiorniamo la sidebar
         updateSidebar();
       } catch (err) {
         console.error("Errore iniziale:", err);
