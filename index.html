@@ -290,14 +290,23 @@
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     /* INSERISCI I TUOI DATI DI CONFIGURAZIONE */
-    const firebaseConfig = {
-      apiKey: "INSERISCI-LA-TUA-API-KEY",
-      authDomain: "INSERISCI-IL-TUO-PROJECT-ID.firebaseapp.com",
-      projectId: "INSERISCI-IL-TUO-PROJECT-ID",
-      storageBucket: "INSERISCI-IL-TUO-PROJECT-ID.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234567890:web:abcdefgh"
-    };
+    // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
+  authDomain: "my-snippet-project-a84b5.firebaseapp.com",
+  projectId: "my-snippet-project-a84b5",
+  storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
+  messagingSenderId: "775794283075",
+  appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
     // Inizializza Firebase
     const app = initializeApp(firebaseConfig);
