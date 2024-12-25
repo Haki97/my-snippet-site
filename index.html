@@ -37,6 +37,7 @@
       padding: 8px;
       border-radius: 4px;
       cursor: pointer;
+      position: relative; /* so we can position icons */
     }
     .sidebar li:hover {
       background: #3b536b;
@@ -187,6 +188,26 @@
     .add-ea-btn:hover {
       background: #8e44ad;
     }
+
+    /* Icons next to the title in the sidebar */
+    .icon-buttons {
+      float: right; /* place icons on the right side */
+      display: inline-flex;
+      gap: 8px;
+      visibility: hidden; /* only show on hover */
+    }
+    .sidebar li:hover .icon-buttons {
+      visibility: visible;
+    }
+    .icon-btn {
+      cursor: pointer;
+      text-decoration: none;
+      color: #fff;
+      opacity: 0.8;
+    }
+    .icon-btn:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -247,16 +268,49 @@
       <button onclick="addEA()">Salva EA</button>
       <div class="info-msg" id="infoEAAdd"></div>
     </div>
+
+    <!-- Hidden form for editing (shared for snippet or EA) -->
+    <div class="form-section hidden" id="editFormSection">
+      <h2>Modifica Elemento</h2>
+      <input type="hidden" id="editId" />
+      <input type="hidden" id="editType" />
+      <div class="form-group">
+        <label for="editTitle">Titolo</label>
+        <input type="text" id="editTitle" />
+      </div>
+      <div class="form-group">
+        <label for="editDescription">Descrizione</label>
+        <input type="text" id="editDescription" />
+      </div>
+      <div class="form-group hidden" id="editCommentsGroup">
+        <label for="editComments">Commenti (solo EA)</label>
+        <textarea id="editComments" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="editCode">Codice/Snippet</label>
+        <textarea id="editCode" rows="5"></textarea>
+      </div>
+      <button onclick="saveEdits()">Salva Modifiche</button>
+      <div class="info-msg" id="infoEdit"></div>
+    </div>
   </div>
 
   <script type="module">
     // Import the Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      getDocs, 
+      doc, 
+      updateDoc, 
+      deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     // Firebase configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
+      apiKey: "YOUR-API-KEY-HERE",
       authDomain: "my-snippet-project-a84b5.firebaseapp.com",
       projectId: "my-snippet-project-a84b5",
       storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
@@ -285,46 +339,92 @@
 
       // Load from "snippets"
       const snippetSnap = await getDocs(collection(db, "snippets"));
-      snippetSnap.forEach(doc => {
-        const data = doc.data();
+      snippetSnap.forEach(docSnap => {
+        const data = docSnap.data();
         snippetArray.push({
           type: "snippet",
-          id: doc.id,
+          id: docSnap.id,
           title: data.title || "",
           description: data.description || "",
           code: data.code || "",
-          comments: "", // snippet doesn't have comments
+          comments: "",
           createdAt: data.createdAt
         });
       });
 
       // Load from "EA"
       const eaSnap = await getDocs(collection(db, "EA"));
-      eaSnap.forEach(doc => {
-        const data = doc.data();
+      eaSnap.forEach(docSnap => {
+        const data = docSnap.data();
         snippetArray.push({
           type: "EA",
-          id: doc.id,
+          id: docSnap.id,
           title: data.title || "",
           description: data.description || "",
-          code: data.snippet || "", // store EA's snippet as "code"
+          code: data.snippet || "",
           comments: data.comments || "",
           createdAt: data.createdAt
         });
       });
 
-      // Update the sidebar to show everything
+      // Update the sidebar
       updateSidebar();
     }
 
     function updateSidebar() {
       const snippetIndex = document.getElementById('snippetIndex');
       snippetIndex.innerHTML = "";
+
       snippetArray.forEach(snippet => {
-        // Show "EA" label if item is from EA
         const li = document.createElement('li');
-        li.textContent = snippet.title + (snippet.type === "EA" ? " (EA)" : "");
-        li.addEventListener('click', () => showSnippetDetail(snippet));
+        const label = snippet.title + (snippet.type === "EA" ? " (EA)" : "");
+
+        // Main clickable area for showing details:
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = label;
+        titleSpan.onclick = () => showSnippetDetail(snippet);
+
+        // Icon container on the right
+        const iconsDiv = document.createElement('span');
+        iconsDiv.className = 'icon-buttons';
+
+        // COPY icon
+        const copyIcon = document.createElement('span');
+        copyIcon.className = 'icon-btn';
+        copyIcon.textContent = '📋'; 
+        copyIcon.title = 'Copia il contenuto';
+        copyIcon.onclick = (e) => {
+          e.stopPropagation(); // prevent parent click
+          copyItem(snippet);
+        };
+
+        // EDIT icon
+        const editIcon = document.createElement('span');
+        editIcon.className = 'icon-btn';
+        editIcon.textContent = '✏️';
+        editIcon.title = 'Modifica';
+        editIcon.onclick = (e) => {
+          e.stopPropagation();
+          editItem(snippet);
+        };
+
+        // TRASH icon
+        const trashIcon = document.createElement('span');
+        trashIcon.className = 'icon-btn';
+        trashIcon.textContent = '🗑️';
+        trashIcon.title = 'Elimina';
+        trashIcon.onclick = (e) => {
+          e.stopPropagation();
+          deleteItem(snippet);
+        };
+
+        iconsDiv.appendChild(copyIcon);
+        iconsDiv.appendChild(editIcon);
+        iconsDiv.appendChild(trashIcon);
+
+        li.appendChild(titleSpan);
+        li.appendChild(iconsDiv);
+
         snippetIndex.appendChild(li);
       });
     }
@@ -337,7 +437,7 @@
         <p><em>${snippet.description}</em></p>
         <pre>${snippet.code}</pre>
       `;
-      // If it's EA and has comments, display them
+      // If EA, show comments
       if (snippet.type === "EA" && snippet.comments) {
         html += `<p><strong>Commenti:</strong> ${snippet.comments}</p>`;
       }
@@ -363,7 +463,7 @@
       );
 
       if (filtered.length === 0) {
-        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
+        resultsDiv.innerHTML = "<p>Nessun elemento trovato.</p>";
         return;
       }
 
@@ -411,7 +511,6 @@
         titleField.value = "";
         descriptionField.value = "";
         codeField.value = "";
-        // Reload so the library updates with the new snippet
         await loadAllSnippets();
       } catch (err) {
         console.error("Errore durante il salvataggio:", err);
@@ -452,7 +551,6 @@
         eaDescriptionField.value = "";
         eaCommentsField.value = "";
         eaSnippetField.value = "";
-        // Reload so the new EA also appears in the library & is searchable
         await loadAllSnippets();
       } catch (err) {
         console.error("Errore durante il salvataggio EA:", err);
@@ -460,6 +558,120 @@
         infoEAAdd.textContent = "Errore durante il salvataggio EA!";
       }
     };
+
+    /**
+     * COPY the snippet.code to the clipboard
+     */
+    function copyItem(snippet) {
+      // snippet.code is the relevant text for both snippet & EA
+      navigator.clipboard.writeText(snippet.code)
+        .then(() => {
+          alert("Codice copiato negli appunti!");
+        })
+        .catch(err => {
+          console.error("Errore durante la copia:", err);
+        });
+    }
+
+    /**
+     * EDIT an item (snippet or EA)
+     * Fill the hidden fields and show the edit form
+     */
+    function editItem(snippet) {
+      // Fill hidden fields
+      document.getElementById('editId').value = snippet.id;
+      document.getElementById('editType').value = snippet.type;
+
+      // Fill visible fields
+      document.getElementById('editTitle').value = snippet.title;
+      document.getElementById('editDescription').value = snippet.description;
+      document.getElementById('editCode').value = snippet.code;
+      document.getElementById('editComments').value = snippet.comments || "";
+
+      // If snippet.type is EA, show the comments group
+      const editCommentsGroup = document.getElementById('editCommentsGroup');
+      if (snippet.type === "EA") {
+        editCommentsGroup.classList.remove('hidden');
+      } else {
+        editCommentsGroup.classList.add('hidden');
+      }
+
+      // Show the edit form
+      toggleFormSection('editFormSection');
+    }
+
+    /**
+     * SAVE edits to Firestore (for snippet or EA)
+     */
+    window.saveEdits = async function() {
+      const infoEdit = document.getElementById('infoEdit');
+      const editId = document.getElementById('editId').value;
+      const editType = document.getElementById('editType').value;
+      const newTitle = document.getElementById('editTitle').value.trim();
+      const newDescription = document.getElementById('editDescription').value.trim();
+      const newCode = document.getElementById('editCode').value.trim();
+      const newComments = document.getElementById('editComments').value.trim();
+
+      if (!newTitle || !newCode) {
+        infoEdit.style.color = "red";
+        infoEdit.textContent = "Titolo e codice/snippet sono obbligatori!";
+        return;
+      }
+
+      try {
+        if (editType === "snippet") {
+          await updateDoc(doc(db, "snippets", editId), {
+            title: newTitle,
+            description: newDescription,
+            code: newCode
+          });
+        } else {
+          await updateDoc(doc(db, "EA", editId), {
+            title: newTitle,
+            description: newDescription,
+            snippet: newCode,
+            comments: newComments
+          });
+        }
+        infoEdit.style.color = "green";
+        infoEdit.textContent = "Modifica salvata con successo!";
+
+        // Reload the data
+        await loadAllSnippets();
+
+        // Hide the edit form after a short delay
+        setTimeout(() => {
+          toggleFormSection('editFormSection'); 
+          infoEdit.textContent = "";
+        }, 800);
+
+      } catch (err) {
+        console.error("Errore durante la modifica:", err);
+        infoEdit.style.color = "red";
+        infoEdit.textContent = "Errore durante la modifica!";
+      }
+    };
+
+    /**
+     * DELETE an item (snippet or EA)
+     */
+    async function deleteItem(snippet) {
+      const confirmDelete = confirm("Sei sicuro di voler eliminare?");
+      if (!confirmDelete) return;
+
+      try {
+        if (snippet.type === "EA") {
+          await deleteDoc(doc(db, "EA", snippet.id));
+        } else {
+          await deleteDoc(doc(db, "snippets", snippet.id));
+        }
+        alert("Elemento eliminato con successo!");
+        await loadAllSnippets();
+      } catch (err) {
+        console.error("Errore durante l'eliminazione:", err);
+        alert("Errore durante l'eliminazione!");
+      }
+    }
 
     // Show/hide form sections
     window.toggleFormSection = function(formSectionId) {
