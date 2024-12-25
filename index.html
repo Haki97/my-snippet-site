@@ -274,78 +274,55 @@
     <div id="searchResults"></div>
   </div>
 
-  <!-- SCRIPT CON TUTTO IL CODICE -->
+  <!-- SCRIPT UNICO CON GLI SDK E TUTTA LA LOGICA -->
   <script type="module">
-    /***********************************************
-     * 1) IMPORT E CONFIGURAZIONE FIREBASE
-     ***********************************************/
-    import { 
-      initializeApp 
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      getDocs 
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-
-    /* INSERISCI I TUOI DATI DI CONFIGURAZIONE */
     // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    import { initializeApp } from "firebase/app";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs
+    } from "firebase/firestore";
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
-  authDomain: "my-snippet-project-a84b5.firebaseapp.com",
-  projectId: "my-snippet-project-a84b5",
-  storageBucket: "my-snippet-project-a84b5.firebasestorage.app",
-  messagingSenderId: "775794283075",
-  appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
-};
+    // Tua configurazione Firebase (quella che hai mandato)
+    const firebaseConfig = {
+      apiKey: "AIzaSyB68foBKWO0OEJBh7YGAvMMs145ChfzfuQ",
+      authDomain: "my-snippet-project-a84b5.firebaseapp.com",
+      projectId: "my-snippet-project-a84b5",
+      storageBucket: "my-snippet-project-a84b5.firebaseapp.com",
+      messagingSenderId: "775794283075",
+      appId: "1:775794283075:web:2edd77ebee2f4a4e54baf6"
+    };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-    // Inizializza Firebase
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    /***********************************************
-     * 2) VARIABILI GLOBALI
-     ***********************************************/
-    let snippetArray = []; // Manteniamo in memoria tutti gli snippet
-    let eaArray      = []; // Manteniamo in memoria tutti gli EA
+    // ARRAYS GLOBALI
+    let snippetArray = [];  // Mantiene tutti gli snippet
+    let eaArray      = [];  // Mantiene tutti gli EA
 
-    /***********************************************
-     * 3) TOGGLE SIDEBAR
-     ***********************************************/
+    // TOGGLE SIDEBAR
     window.toggleSidebar = function() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('hidden');
     };
 
-    /***********************************************
-     * 4) MOSTRA / NASCONDI I FORM
-     ***********************************************/
+    // MOSTRA / NASCONDI FORM
     window.showSnippetForm = function() {
-      // Mostra snippetForm, nascondi eaForm
       document.getElementById('snippetForm').classList.add('active');
       document.getElementById('eaForm').classList.remove('active');
     };
 
     window.showEAForm = function() {
-      // Mostra eaForm, nascondi snippetForm
       document.getElementById('eaForm').classList.add('active');
       document.getElementById('snippetForm').classList.remove('active');
     };
 
-    /***********************************************
-     * 5) CARICAMENTO SNIPPET & EA (LETTURA)
-     ***********************************************/
+    // CARICA TUTTI GLI SNIPPET DA FIRESTORE
     async function loadAllSnippets() {
-      snippetArray = []; // Svuotiamo l'array locale
+      snippetArray = [];
       const snapshot = await getDocs(collection(db, "snippets"));
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -359,8 +336,9 @@ const app = initializeApp(firebaseConfig);
       });
     }
 
+    // CARICA TUTTI GLI EA DA FIRESTORE
     async function loadAllEA() {
-      eaArray = []; // Svuotiamo l'array locale
+      eaArray = [];
       const snapshot = await getDocs(collection(db, "ea"));
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -374,34 +352,31 @@ const app = initializeApp(firebaseConfig);
       });
     }
 
-    // Aggiorna l'indice nella sidebar
+    // AGGIORNA SIDEBAR
     function updateSidebar() {
       const snippetIndex = document.getElementById('snippetIndex');
       const eaIndex      = document.getElementById('eaIndex');
-
       snippetIndex.innerHTML = "";
       eaIndex.innerHTML      = "";
 
-      // Popola la lista Snippet
+      // Snippet
       snippetArray.forEach(sn => {
         const li = document.createElement('li');
         li.textContent = sn.title || "[Senza titolo]";
-        // Cliccando -> mostra snippet detail
         li.addEventListener('click', () => showSnippetDetail(sn));
         snippetIndex.appendChild(li);
       });
 
-      // Popola la lista EA
+      // EA
       eaArray.forEach(ea => {
         const li = document.createElement('li');
         li.textContent = ea.title || "[Senza titolo]";
-        // Cliccando -> mostra EA detail
         li.addEventListener('click', () => showEADetail(ea));
         eaIndex.appendChild(li);
       });
     }
 
-    // Mostra un singolo snippet al centro
+    // MOSTRA DETTAGLIO SNIPPET
     function showSnippetDetail(snippet) {
       const resultsDiv = document.getElementById('searchResults');
       resultsDiv.innerHTML = `
@@ -411,7 +386,7 @@ const app = initializeApp(firebaseConfig);
       `;
     }
 
-    // Mostra un singolo EA al centro
+    // MOSTRA DETTAGLIO EA
     function showEADetail(ea) {
       const resultsDiv = document.getElementById('searchResults');
       resultsDiv.innerHTML = `
@@ -421,9 +396,7 @@ const app = initializeApp(firebaseConfig);
       `;
     }
 
-    /***********************************************
-     * 6) RICERCA LOCALE (SNIPPET + EA)
-     ***********************************************/
+    // RICERCA LOCALE (SNIPPET + EA)
     window.searchLocal = function() {
       const input = document.getElementById('searchInput').value.trim().toLowerCase();
       const resultsDiv = document.getElementById('searchResults');
@@ -452,12 +425,13 @@ const app = initializeApp(firebaseConfig);
         );
       });
 
+      // Se non trova nulla
       if (filteredSnippets.length === 0 && filteredEA.length === 0) {
         resultsDiv.innerHTML = "<p>Nessun risultato trovato.</p>";
         return;
       }
 
-      // Mostriamo i risultati (Snippets)
+      // Mostra SNIPPET trovati
       if (filteredSnippets.length > 0) {
         const snippetHeader = document.createElement('h3');
         snippetHeader.textContent = "Risultati Snippet:";
@@ -475,7 +449,7 @@ const app = initializeApp(firebaseConfig);
         });
       }
 
-      // Mostriamo i risultati (EA)
+      // Mostra EA trovati
       if (filteredEA.length > 0) {
         const eaHeader = document.createElement('h3');
         eaHeader.textContent = "Risultati EA:";
@@ -494,9 +468,7 @@ const app = initializeApp(firebaseConfig);
       }
     };
 
-    /***********************************************
-     * 7) INSERIMENTO SNIPPET / EA (SCRITTURA)
-     ***********************************************/
+    // INSERISCI NUOVO SNIPPET
     window.addSnippet = async function() {
       const titleField       = document.getElementById('titleSnippet');
       const descriptionField = document.getElementById('descriptionSnippet');
@@ -514,7 +486,6 @@ const app = initializeApp(firebaseConfig);
       }
 
       try {
-        // Aggiunge un doc nella collezione "snippets"
         await addDoc(collection(db, "snippets"), {
           title,
           description,
@@ -529,10 +500,9 @@ const app = initializeApp(firebaseConfig);
         descriptionField.value = "";
         codeField.value        = "";
 
-        // Ricarichiamo i dati e aggiorniamo la sidebar
+        // Ricarica e aggiorna sidebar
         await loadAllSnippets();
         updateSidebar();
-
       } catch (err) {
         console.error("Errore salvataggio snippet:", err);
         infoAdd.style.color = "red";
@@ -540,6 +510,7 @@ const app = initializeApp(firebaseConfig);
       }
     };
 
+    // INSERISCI NUOVO EA
     window.addEA = async function() {
       const titleField       = document.getElementById('titleEA');
       const descriptionField = document.getElementById('descriptionEA');
@@ -557,7 +528,6 @@ const app = initializeApp(firebaseConfig);
       }
 
       try {
-        // Aggiunge un doc nella collezione "ea"
         await addDoc(collection(db, "ea"), {
           title,
           description,
@@ -572,10 +542,9 @@ const app = initializeApp(firebaseConfig);
         descriptionField.value = "";
         codeField.value        = "";
 
-        // Ricarichiamo i dati e aggiorniamo la sidebar
+        // Ricarica e aggiorna sidebar
         await loadAllEA();
         updateSidebar();
-
       } catch (err) {
         console.error("Errore salvataggio EA:", err);
         infoAdd.style.color = "red";
@@ -583,15 +552,13 @@ const app = initializeApp(firebaseConfig);
       }
     };
 
-    /***********************************************
-     * 8) AVVIO INIZIALE
-     ***********************************************/
+    // AVVIO INIZIALE
     (async function start() {
       try {
-        // Carica gli Snippet e gli EA
+        // Carichiamo snippet & EA
         await loadAllSnippets();
         await loadAllEA();
-        // Aggiorna la sidebar
+        // Aggiorniamo sidebar
         updateSidebar();
       } catch (err) {
         console.error("Errore iniziale:", err);
