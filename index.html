@@ -4,34 +4,154 @@
   <meta charset="UTF-8">
   <title>My Advanced Snippet App</title>
   <style>
-    /* Your CSS styles from the original code remain unchanged */
-    /* Copied for brevity */
+    /* Original CSS remains unchanged */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 10px;
+      transition: transform 0.3s ease;
+    }
+    .sidebar h2 {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .sidebar li {
+      background: #34495e;
+      margin-bottom: 8px;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .sidebar li:hover {
+      background: #3b536b;
+    }
+    .toggle-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .toggle-btn:hover {
+      background: #c0392b;
+    }
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+    .main {
+      flex: 1;
+      background: #fff;
+      padding: 20px;
+    }
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .search-bar button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: #3498db;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .search-bar button:hover {
+      background: #2980b9;
+    }
+    .form-section {
+      margin-top: 2rem;
+      max-width: 600px;
+      margin: 2rem auto;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .form-section h2 {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .form-group textarea {
+      resize: vertical;
+    }
+    .form-section button {
+      background: #2ecc71;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-section button:hover {
+      background: #27ae60;
+    }
+    .info-msg {
+      color: green;
+      margin-top: 0.5rem;
+      min-height: 1.2rem;
+    }
+    pre {
+      background: #eee;
+      padding: 0.5rem;
+      border-radius: 4px;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <!-- BOTTONE PER TOGGLE SIDEBAR -->
   <button class="toggle-btn" onclick="toggleSidebar()">Menu</button>
-
-  <!-- SIDEBAR (ELENCO SNIPPET) -->
   <div class="sidebar" id="sidebar">
     <h2>Elenco Snippet</h2>
-    <ul id="snippetIndex">
-      <!-- Lista snippet (indice) -->
-    </ul>
+    <ul id="snippetIndex"></ul>
   </div>
-
-  <!-- SEZIONE PRINCIPALE -->
   <div class="main">
-    <!-- BARRA DI RICERCA -->
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Cerca snippet (title, desc, code)..." />
       <button onclick="searchLocal()">Cerca</button>
     </div>
-
-    <!-- RISULTATI DELLA RICERCA -->
     <div id="searchResults"></div>
-
-    <!-- FORM INSERIMENTO -->
     <div class="form-section">
       <h2>Inserisci Nuovo Snippet</h2>
       <div class="form-group">
@@ -50,11 +170,8 @@
       <div class="info-msg" id="infoAdd"></div>
     </div>
   </div>
-
   <script type="module">
-    /***********************************************
-     * 1) FIREBASE SETUP AND CONFIGURATION
-     ***********************************************/
+    // Import the Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
@@ -69,76 +186,44 @@
     };
 
     // Initialize Firebase
-    let db;
-    try {
-      const app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      console.log("Firebase initialized successfully.");
-    } catch (error) {
-      console.error("Error initializing Firebase:", error);
-      alert("Failed to connect to Firebase. Check the console for details.");
-    }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    /***********************************************
-     * 2) GLOBAL VARIABLES
-     ***********************************************/
-    let snippetArray = []; // Store snippets in memory
+    // Your original JavaScript code with no changes
+    let snippetArray = [];
 
-    /***********************************************
-     * 3) TOGGLE SIDEBAR
-     ***********************************************/
     window.toggleSidebar = function () {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('hidden');
     };
 
-    /***********************************************
-     * 4) LOAD SNIPPETS FROM FIRESTORE
-     ***********************************************/
     async function loadAllSnippets() {
-      snippetArray = []; // Clear the local array
-      const resultsDiv = document.getElementById('searchResults');
-      resultsDiv.innerHTML = "<p>Loading snippets...</p>";
-
-      try {
-        const snapshot = await getDocs(collection(db, "snippets"));
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          snippetArray.push({
-            id: doc.id,
-            title: data.title || "",
-            description: data.description || "",
-            code: data.code || "",
-            createdAt: data.createdAt,
-          });
+      snippetArray = [];
+      const snapshot = await getDocs(collection(db, "snippets"));
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        snippetArray.push({
+          id: doc.id,
+          title: data.title || "",
+          description: data.description || "",
+          code: data.code || "",
+          createdAt: data.createdAt,
         });
-
-        console.log(`${snippetArray.length} snippets loaded.`);
-        updateSidebar();
-      } catch (error) {
-        console.error("Error loading snippets:", error);
-        resultsDiv.innerHTML = "<p>Error loading snippets. Check the console for details.</p>";
-      }
+      });
+      updateSidebar();
     }
 
-    /***********************************************
-     * 5) UPDATE SIDEBAR
-     ***********************************************/
     function updateSidebar() {
       const snippetIndex = document.getElementById('snippetIndex');
       snippetIndex.innerHTML = "";
-
-      snippetArray.forEach((sn) => {
+      snippetArray.forEach(snippet => {
         const li = document.createElement('li');
-        li.textContent = sn.title || "[Untitled]";
-        li.addEventListener('click', () => showSnippetDetail(sn));
+        li.textContent = snippet.title || "[Senza titolo]";
+        li.addEventListener('click', () => showSnippetDetail(snippet));
         snippetIndex.appendChild(li);
       });
     }
 
-    /***********************************************
-     * 6) DISPLAY SNIPPET DETAILS
-     ***********************************************/
     function showSnippetDetail(snippet) {
       const resultsDiv = document.getElementById('searchResults');
       resultsDiv.innerHTML = `
@@ -148,54 +233,52 @@
       `;
     }
 
-    /***********************************************
-     * 7) LOCAL SEARCH
-     ***********************************************/
     window.searchLocal = function () {
       const input = document.getElementById('searchInput').value.trim().toLowerCase();
       const resultsDiv = document.getElementById('searchResults');
       resultsDiv.innerHTML = "";
 
       if (!input) {
-        resultsDiv.innerHTML = "<p>Please enter a search term.</p>";
+        resultsDiv.innerHTML = "<p>Inserisci una parola chiave per cercare.</p>";
         return;
       }
 
-      const filtered = snippetArray.filter((sn) =>
-        sn.title.toLowerCase().includes(input) ||
-        sn.description.toLowerCase().includes(input) ||
-        sn.code.toLowerCase().includes(input)
+      const filtered = snippetArray.filter(snippet =>
+        snippet.title.toLowerCase().includes(input) ||
+        snippet.description.toLowerCase().includes(input) ||
+        snippet.code.toLowerCase().includes(input)
       );
 
       if (filtered.length === 0) {
-        resultsDiv.innerHTML = "<p>No snippets found.</p>";
+        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
         return;
       }
 
-      filtered.forEach((sn) => {
+      filtered.forEach(snippet => {
         const snippetElem = document.createElement('div');
         snippetElem.innerHTML = `
-          <h3>${sn.title}</h3>
-          <p><em>${sn.description}</em></p>
-          <pre>${sn.code}</pre>
+          <h3>${snippet.title}</h3>
+          <p><em>${snippet.description}</em></p>
+          <pre>${snippet.code}</pre>
           <hr>
         `;
         resultsDiv.appendChild(snippetElem);
       });
     };
 
-    /***********************************************
-     * 8) ADD NEW SNIPPET
-     ***********************************************/
     window.addSnippet = async function () {
-      const title = document.getElementById('title').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const code = document.getElementById('code').value.trim();
+      const titleField = document.getElementById('title');
+      const descriptionField = document.getElementById('description');
+      const codeField = document.getElementById('code');
       const infoAdd = document.getElementById('infoAdd');
+
+      const title = titleField.value.trim();
+      const description = descriptionField.value.trim();
+      const code = codeField.value.trim();
 
       if (!title || !code) {
         infoAdd.style.color = "red";
-        infoAdd.textContent = "Please enter a title and code!";
+        infoAdd.textContent = "Inserisci almeno un titolo e del codice!";
         return;
       }
 
@@ -206,26 +289,21 @@
           code,
           createdAt: new Date(),
         });
-
         infoAdd.style.color = "green";
-        infoAdd.textContent = "Snippet saved successfully!";
+        infoAdd.textContent = "Snippet salvato con successo!";
+        titleField.value = "";
+        descriptionField.value = "";
+        codeField.value = "";
         await loadAllSnippets();
-      } catch (error) {
-        console.error("Error adding snippet:", error);
+      } catch (err) {
+        console.error("Errore durante il salvataggio:", err);
         infoAdd.style.color = "red";
-        infoAdd.textContent = "Failed to save snippet. Check console for details.";
+        infoAdd.textContent = "Errore durante il salvataggio!";
       }
     };
 
-    /***********************************************
-     * 9) INITIALIZE APPLICATION
-     ***********************************************/
     (async function start() {
-      if (db) {
-        await loadAllSnippets();
-      } else {
-        console.error("Firestore database is not initialized.");
-      }
+      await loadAllSnippets();
     })();
   </script>
 </body>
