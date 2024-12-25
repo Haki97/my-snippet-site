@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>My Advanced Snippet App</title>
   <style>
-    /* Original CSS remains unchanged */
+    /* Original CSS remains mostly unchanged */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -37,7 +37,6 @@
       padding: 8px;
       border-radius: 4px;
       cursor: pointer;
-      position: relative; /* so we can position icons */
     }
     .sidebar li:hover {
       background: #3b536b;
@@ -189,25 +188,22 @@
       background: #8e44ad;
     }
 
-    /* Icons next to the title in the sidebar */
+    /* Icons next to the title in the detail view */
     .icon-buttons {
-      float: right; /* place icons on the right side */
       display: inline-flex;
       gap: 8px;
-      visibility: hidden; /* only show on hover */
-    }
-    .sidebar li:hover .icon-buttons {
-      visibility: visible;
+      margin-left: 1rem; /* space from the title */
     }
     .icon-btn {
       cursor: pointer;
       text-decoration: none;
-      color: #fff;
-      opacity: 0.8;
+      color: #333;
+      font-size: 1.2rem;
     }
     .icon-btn:hover {
-      opacity: 1;
+      color: #000;
     }
+
   </style>
 </head>
 <body>
@@ -379,64 +375,45 @@
         const li = document.createElement('li');
         const label = snippet.title + (snippet.type === "EA" ? " (EA)" : "");
 
-        // Main clickable area for showing details:
-        const titleSpan = document.createElement('span');
-        titleSpan.textContent = label;
-        titleSpan.onclick = () => showSnippetDetail(snippet);
+        // We only show the clickable title in the sidebar
+        li.textContent = label;
 
-        // Icon container on the right
-        const iconsDiv = document.createElement('span');
-        iconsDiv.className = 'icon-buttons';
-
-        // COPY icon
-        const copyIcon = document.createElement('span');
-        copyIcon.className = 'icon-btn';
-        copyIcon.textContent = '📋'; 
-        copyIcon.title = 'Copia il contenuto';
-        copyIcon.onclick = (e) => {
-          e.stopPropagation(); // prevent parent click
-          copyItem(snippet);
-        };
-
-        // EDIT icon
-        const editIcon = document.createElement('span');
-        editIcon.className = 'icon-btn';
-        editIcon.textContent = '✏️';
-        editIcon.title = 'Modifica';
-        editIcon.onclick = (e) => {
-          e.stopPropagation();
-          editItem(snippet);
-        };
-
-        // TRASH icon
-        const trashIcon = document.createElement('span');
-        trashIcon.className = 'icon-btn';
-        trashIcon.textContent = '🗑️';
-        trashIcon.title = 'Elimina';
-        trashIcon.onclick = (e) => {
-          e.stopPropagation();
-          deleteItem(snippet);
-        };
-
-        iconsDiv.appendChild(copyIcon);
-        iconsDiv.appendChild(editIcon);
-        iconsDiv.appendChild(trashIcon);
-
-        li.appendChild(titleSpan);
-        li.appendChild(iconsDiv);
-
+        // Clicking the list item shows details in main area
+        li.onclick = () => showSnippetDetail(snippet);
         snippetIndex.appendChild(li);
       });
     }
 
+    /**
+     * Renders the item detail with icons next to the Title
+     */
     function showSnippetDetail(snippet) {
       const resultsDiv = document.getElementById('searchResults');
-      // Always show title, description, code
+
+      // Prepare icons next to the title
+      // We'll build a string that includes the icons with onClick calls
+      let iconsHTML = `
+        <span class="icon-buttons">
+          <!-- COPY icon -->
+          <span class="icon-btn" title="Copia il contenuto" onclick="copyItem('${snippet.id}')">📋</span>
+          
+          <!-- EDIT icon -->
+          <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
+          
+          <!-- DELETE icon -->
+          <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
+        </span>
+      `;
+
       let html = `
-        <h2>${snippet.title}</h2>
+        <h2>
+          ${snippet.title}
+          ${iconsHTML}
+        </h2>
         <p><em>${snippet.description}</em></p>
         <pre>${snippet.code}</pre>
       `;
+
       // If EA, show comments
       if (snippet.type === "EA" && snippet.comments) {
         html += `<p><strong>Commenti:</strong> ${snippet.comments}</p>`;
@@ -468,9 +445,19 @@
       }
 
       filtered.forEach(snippet => {
-        const snippetElem = document.createElement('div');
+        let iconsHTML = `
+          <span class="icon-buttons">
+            <span class="icon-btn" title="Copia il contenuto" onclick="copyItem('${snippet.id}')">📋</span>
+            <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
+            <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
+          </span>
+        `;
+
         let html = `
-          <h3>${snippet.title}</h3>
+          <h3>
+            ${snippet.title}
+            ${iconsHTML}
+          </h3>
           <p><em>${snippet.description}</em></p>
           <pre>${snippet.code}</pre>
         `;
@@ -478,11 +465,14 @@
           html += `<p><strong>Commenti:</strong> ${snippet.comments}</p>`;
         }
         html += "<hr>";
+
+        const snippetElem = document.createElement('div');
         snippetElem.innerHTML = html;
         resultsDiv.appendChild(snippetElem);
       });
     };
 
+    // The addSnippet() and addEA() remain the same
     window.addSnippet = async function () {
       const titleField = document.getElementById('title');
       const descriptionField = document.getElementById('description');
@@ -560,10 +550,19 @@
     };
 
     /**
+     * Return the snippet object from snippetArray by ID
+     */
+    function getSnippetById(id) {
+      return snippetArray.find(item => item.id === id);
+    }
+
+    /**
      * COPY the snippet.code to the clipboard
      */
-    function copyItem(snippet) {
-      // snippet.code is the relevant text for both snippet & EA
+    window.copyItem = function(snippetId) {
+      const snippet = getSnippetById(snippetId);
+      if (!snippet) return;
+
       navigator.clipboard.writeText(snippet.code)
         .then(() => {
           alert("Codice copiato negli appunti!");
@@ -571,14 +570,16 @@
         .catch(err => {
           console.error("Errore durante la copia:", err);
         });
-    }
+    };
 
     /**
      * EDIT an item (snippet or EA)
      * Fill the hidden fields and show the edit form
      */
-    function editItem(snippet) {
-      // Fill hidden fields
+    window.editItem = function(snippetId) {
+      const snippet = getSnippetById(snippetId);
+      if (!snippet) return;
+
       document.getElementById('editId').value = snippet.id;
       document.getElementById('editType').value = snippet.type;
 
@@ -598,7 +599,7 @@
 
       // Show the edit form
       toggleFormSection('editFormSection');
-    }
+    };
 
     /**
      * SAVE edits to Firestore (for snippet or EA)
@@ -655,7 +656,10 @@
     /**
      * DELETE an item (snippet or EA)
      */
-    async function deleteItem(snippet) {
+    window.deleteItem = async function(snippetId) {
+      const snippet = getSnippetById(snippetId);
+      if (!snippet) return;
+
       const confirmDelete = confirm("Sei sicuro di voler eliminare?");
       if (!confirmDelete) return;
 
@@ -671,7 +675,7 @@
         console.error("Errore durante l'eliminazione:", err);
         alert("Errore durante l'eliminazione!");
       }
-    }
+    };
 
     // Show/hide form sections
     window.toggleFormSection = function(formSectionId) {
@@ -679,6 +683,7 @@
       section.classList.toggle('hidden');
     };
 
+    // Initial load
     (async function start() {
       await loadAllSnippets();
     })();
