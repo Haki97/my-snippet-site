@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Snippet & EA Library</title>
   <style>
     /* RESET E LAYOUT DI BASE */
@@ -124,6 +124,7 @@
     .action-buttons button:hover {
       background: #27ae60;
     }
+
     /****************************************
      * SEZIONI DEI FORM
      ****************************************/
@@ -175,7 +176,7 @@
     .info-msg {
       color: green;
       margin-top: 0.5rem;
-      min-height: 1.2rem;
+      min-height: 1.2rem; 
     }
 
     /****************************************
@@ -273,7 +274,7 @@
     <div id="searchResults"></div>
   </div>
 
-  <!-- SCRIPT UNICO -->
+  <!-- SCRIPT CON TUTTO IL CODICE -->
   <script type="module">
     /***********************************************
      * 1) IMPORT E CONFIGURAZIONE FIREBASE
@@ -281,7 +282,6 @@
     import { 
       initializeApp 
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-
     import { 
       getFirestore, 
       collection, 
@@ -289,12 +289,12 @@
       getDocs 
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    // Configurazione Firebase (usa i tuoi dati)
+    /* INSERISCI I TUOI DATI DI CONFIGURAZIONE */
     const firebaseConfig = {
-      apiKey: "API_KEY",
-      authDomain: "PROJECT_ID.firebaseapp.com",
-      projectId: "PROJECT_ID",
-      storageBucket: "PROJECT_ID.appspot.com",
+      apiKey: "INSERISCI-LA-TUA-API-KEY",
+      authDomain: "INSERISCI-IL-TUO-PROJECT-ID.firebaseapp.com",
+      projectId: "INSERISCI-IL-TUO-PROJECT-ID",
+      storageBucket: "INSERISCI-IL-TUO-PROJECT-ID.appspot.com",
       messagingSenderId: "1234567890",
       appId: "1:1234567890:web:abcdefgh"
     };
@@ -318,17 +318,19 @@
     };
 
     /***********************************************
-     * 4) FUNZIONI PER MOSTRARE / NASCONDERE I FORM
+     * 4) MOSTRA / NASCONDI I FORM
      ***********************************************/
-    function showSnippetForm() {
+    window.showSnippetForm = function() {
+      // Mostra snippetForm, nascondi eaForm
       document.getElementById('snippetForm').classList.add('active');
       document.getElementById('eaForm').classList.remove('active');
-    }
+    };
 
-    function showEAForm() {
+    window.showEAForm = function() {
+      // Mostra eaForm, nascondi snippetForm
       document.getElementById('eaForm').classList.add('active');
       document.getElementById('snippetForm').classList.remove('active');
-    }
+    };
 
     /***********************************************
      * 5) CARICAMENTO SNIPPET & EA (LETTURA)
@@ -349,7 +351,7 @@
     }
 
     async function loadAllEA() {
-      eaArray = [];
+      eaArray = []; // Svuotiamo l'array locale
       const snapshot = await getDocs(collection(db, "ea"));
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -371,14 +373,16 @@
       snippetIndex.innerHTML = "";
       eaIndex.innerHTML      = "";
 
+      // Popola la lista Snippet
       snippetArray.forEach(sn => {
         const li = document.createElement('li');
         li.textContent = sn.title || "[Senza titolo]";
-        // Cliccando sul li -> mostra snippet detail
+        // Cliccando -> mostra snippet detail
         li.addEventListener('click', () => showSnippetDetail(sn));
         snippetIndex.appendChild(li);
       });
 
+      // Popola la lista EA
       eaArray.forEach(ea => {
         const li = document.createElement('li');
         li.textContent = ea.title || "[Senza titolo]";
@@ -439,7 +443,6 @@
         );
       });
 
-      // Se non trova nulla
       if (filteredSnippets.length === 0 && filteredEA.length === 0) {
         resultsDiv.innerHTML = "<p>Nessun risultato trovato.</p>";
         return;
@@ -576,10 +579,10 @@
      ***********************************************/
     (async function start() {
       try {
-        // Carichiamo snippet ed EA dal DB
+        // Carica gli Snippet e gli EA
         await loadAllSnippets();
         await loadAllEA();
-        // Aggiorniamo la sidebar
+        // Aggiorna la sidebar
         updateSidebar();
       } catch (err) {
         console.error("Errore iniziale:", err);
