@@ -168,7 +168,7 @@
       background: #27ae60;
     }
 
-    /* New "Add EA" button styling */
+    /* "Add EA" button styling */
     .add-ea-btn {
       background: #9b59b6;
       color: #fff;
@@ -225,7 +225,7 @@
       <div class="info-msg" id="infoAdd"></div>
     </div>
 
-    <!-- NEW: EA form (hidden by default) -->
+    <!-- EA form (hidden by default) -->
     <div class="form-section hidden" id="eaFormSection">
       <h2>Inserisci Nuovo EA</h2>
       <div class="form-group">
@@ -268,7 +268,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Your original snippet code with no changes
+    // Single array to store both Snippets and EA items
     let snippetArray = [];
 
     window.toggleSidebar = function () {
@@ -276,19 +276,44 @@
       sidebar.classList.toggle('hidden');
     };
 
+    /**
+     * Load both Snippets (from "snippets" collection)
+     * and EA items (from "EA" collection) into snippetArray
+     */
     async function loadAllSnippets() {
       snippetArray = [];
-      const snapshot = await getDocs(collection(db, "snippets"));
-      snapshot.forEach(doc => {
+
+      // Load from "snippets"
+      const snippetSnap = await getDocs(collection(db, "snippets"));
+      snippetSnap.forEach(doc => {
         const data = doc.data();
         snippetArray.push({
+          type: "snippet",
           id: doc.id,
           title: data.title || "",
           description: data.description || "",
           code: data.code || "",
-          createdAt: data.createdAt,
+          comments: "", // snippet doesn't have comments
+          createdAt: data.createdAt
         });
       });
+
+      // Load from "EA"
+      const eaSnap = await getDocs(collection(db, "EA"));
+      eaSnap.forEach(doc => {
+        const data = doc.data();
+        snippetArray.push({
+          type: "EA",
+          id: doc.id,
+          title: data.title || "",
+          description: data.description || "",
+          code: data.snippet || "", // store EA's snippet as "code"
+          comments: data.comments || "",
+          createdAt: data.createdAt
+        });
+      });
+
+      // Update the sidebar to show everything
       updateSidebar();
     }
 
@@ -296,8 +321,9 @@
       const snippetIndex = document.getElementById('snippetIndex');
       snippetIndex.innerHTML = "";
       snippetArray.forEach(snippet => {
+        // Show "EA" label if item is from EA
         const li = document.createElement('li');
-        li.textContent = snippet.title || "[Senza titolo]";
+        li.textContent = snippet.title + (snippet.type === "EA" ? " (EA)" : "");
         li.addEventListener('click', () => showSnippetDetail(snippet));
         snippetIndex.appendChild(li);
       });
@@ -305,11 +331,17 @@
 
     function showSnippetDetail(snippet) {
       const resultsDiv = document.getElementById('searchResults');
-      resultsDiv.innerHTML = `
+      // Always show title, description, code
+      let html = `
         <h2>${snippet.title}</h2>
         <p><em>${snippet.description}</em></p>
         <pre>${snippet.code}</pre>
       `;
+      // If it's EA and has comments, display them
+      if (snippet.type === "EA" && snippet.comments) {
+        html += `<p><strong>Commenti:</strong> ${snippet.comments}</p>`;
+      }
+      resultsDiv.innerHTML = html;
     }
 
     window.searchLocal = function () {
@@ -322,10 +354,12 @@
         return;
       }
 
+      // Search title, description, code, and comments
       const filtered = snippetArray.filter(snippet =>
         snippet.title.toLowerCase().includes(input) ||
-        snippet.description.toLowerCase().includes(input) ||
-        snippet.code.toLowerCase().includes(input)
+        (snippet.description && snippet.description.toLowerCase().includes(input)) ||
+        (snippet.code && snippet.code.toLowerCase().includes(input)) ||
+        (snippet.comments && snippet.comments.toLowerCase().includes(input))
       );
 
       if (filtered.length === 0) {
@@ -335,12 +369,16 @@
 
       filtered.forEach(snippet => {
         const snippetElem = document.createElement('div');
-        snippetElem.innerHTML = `
+        let html = `
           <h3>${snippet.title}</h3>
           <p><em>${snippet.description}</em></p>
           <pre>${snippet.code}</pre>
-          <hr>
         `;
+        if (snippet.type === "EA" && snippet.comments) {
+          html += `<p><strong>Commenti:</strong> ${snippet.comments}</p>`;
+        }
+        html += "<hr>";
+        snippetElem.innerHTML = html;
         resultsDiv.appendChild(snippetElem);
       });
     };
@@ -373,6 +411,7 @@
         titleField.value = "";
         descriptionField.value = "";
         codeField.value = "";
+        // Reload so the library updates with the new snippet
         await loadAllSnippets();
       } catch (err) {
         console.error("Errore durante il salvataggio:", err);
@@ -381,7 +420,6 @@
       }
     };
 
-    // NEW: EA - Add doc with "title, description, comments, snippet"
     window.addEA = async function () {
       const eaTitleField = document.getElementById('eaTitle');
       const eaDescriptionField = document.getElementById('eaDescription');
@@ -414,6 +452,8 @@
         eaDescriptionField.value = "";
         eaCommentsField.value = "";
         eaSnippetField.value = "";
+        // Reload so the new EA also appears in the library & is searchable
+        await loadAllSnippets();
       } catch (err) {
         console.error("Errore durante il salvataggio EA:", err);
         infoEAAdd.style.color = "red";
@@ -421,7 +461,7 @@
       }
     };
 
-    // Updated function to toggle ANY form section by ID
+    // Show/hide form sections
     window.toggleFormSection = function(formSectionId) {
       const section = document.getElementById(formSectionId);
       section.classList.toggle('hidden');
