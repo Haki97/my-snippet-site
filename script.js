@@ -12,12 +12,12 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// Configurazione Firebase (sostituisci con i TUOI valori)
+/* Sostituisci con i TUOI valori da "Project settings" -> "Config" */
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT_ID.firebaseapp.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
+  apiKey: "TUO_API_KEY",
+  authDomain: "TUO_PROJECT_ID.firebaseapp.com",
+  projectId: "TUO_PROJECT_ID",
+  storageBucket: "TUO_PROJECT_ID.appspot.com",
   messagingSenderId: "1234567890",
   appId: "1:1234567890:web:abcdefgh"
 };
@@ -28,8 +28,7 @@ const db  = getFirestore(app);
 /***********************************************
  * 2) VARIABILI GLOBALI
  ***********************************************/
-let snippetArray = [];
-let eaArray      = [];
+let snippetArray = [];  // qui manteniamo in memoria tutti gli snippet
 
 /***********************************************
  * 3) TOGGLE SIDEBAR
@@ -40,23 +39,11 @@ window.toggleSidebar = function() {
 };
 
 /***********************************************
- * 4) MOSTRA / NASCONDI FORM
- ***********************************************/
-window.showSnippetForm = function() {
-  document.getElementById('snippetForm').classList.add('active');
-  document.getElementById('eaForm').classList.remove('active');
-};
-
-window.showEAForm = function() {
-  document.getElementById('eaForm').classList.add('active');
-  document.getElementById('snippetForm').classList.remove('active');
-};
-
-/***********************************************
- * 5) CARICAMENTO SNIPPET & EA (LETTURA)
+ * 4) CARICAMENTO SNIPPET (LETTURA)
  ***********************************************/
 async function loadAllSnippets() {
-  snippetArray = [];
+  snippetArray = []; // svuotiamo l'array
+
   const snapshot = await getDocs(collection(db, "snippets"));
   snapshot.forEach(doc => {
     const data = doc.data();
@@ -70,27 +57,10 @@ async function loadAllSnippets() {
   });
 }
 
-async function loadAllEA() {
-  eaArray = [];
-  const snapshot = await getDocs(collection(db, "ea"));
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    eaArray.push({
-      id: doc.id,
-      title: data.title || "",
-      description: data.description || "",
-      code: data.code || "",
-      createdAt: data.createdAt
-    });
-  });
-}
-
+/* Aggiorna l'indice nella sidebar */
 function updateSidebar() {
   const snippetIndex = document.getElementById('snippetIndex');
-  const eaIndex      = document.getElementById('eaIndex');
-
   snippetIndex.innerHTML = "";
-  eaIndex.innerHTML      = "";
 
   snippetArray.forEach(sn => {
     const li = document.createElement('li');
@@ -98,35 +68,20 @@ function updateSidebar() {
     li.addEventListener('click', () => showSnippetDetail(sn));
     snippetIndex.appendChild(li);
   });
-
-  eaArray.forEach(ea => {
-    const li = document.createElement('li');
-    li.textContent = ea.title || "[Senza titolo]";
-    li.addEventListener('click', () => showEADetail(ea));
-    eaIndex.appendChild(li);
-  });
 }
 
+/* Mostra un singolo snippet al centro (in #searchResults) */
 function showSnippetDetail(snippet) {
   const resultsDiv = document.getElementById('searchResults');
-  resultsDiv.innerHTML = `
+  resultsDiv.innerHTML = 
     <h2>${snippet.title}</h2>
     <p><em>${snippet.description}</em></p>
     <pre>${snippet.code}</pre>
-  `;
-}
-
-function showEADetail(ea) {
-  const resultsDiv = document.getElementById('searchResults');
-  resultsDiv.innerHTML = `
-    <h2>${ea.title}</h2>
-    <p><em>${ea.description}</em></p>
-    <pre>${ea.code}</pre>
-  `;
+  ;
 }
 
 /***********************************************
- * 6) RICERCA LOCALE (SNIPPET + EA)
+ * 5) RICERCA LOCALE
  ***********************************************/
 window.searchLocal = function() {
   const input = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -138,7 +93,7 @@ window.searchLocal = function() {
     return;
   }
 
-  const filteredSnippets = snippetArray.filter(sn => {
+  const filtered = snippetArray.filter(sn => {
     return (
       sn.title.toLowerCase().includes(input) ||
       sn.description.toLowerCase().includes(input) ||
@@ -146,64 +101,31 @@ window.searchLocal = function() {
     );
   });
 
-  const filteredEA = eaArray.filter(ea => {
-    return (
-      ea.title.toLowerCase().includes(input) ||
-      ea.description.toLowerCase().includes(input) ||
-      ea.code.toLowerCase().includes(input)
-    );
-  });
-
-  if (filteredSnippets.length === 0 && filteredEA.length === 0) {
-    resultsDiv.innerHTML = "<p>Nessun risultato trovato.</p>";
+  if (filtered.length === 0) {
+    resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
     return;
   }
 
-  // Mostriamo i risultati Snippet
-  if (filteredSnippets.length > 0) {
-    const snippetHeader = document.createElement('h3');
-    snippetHeader.textContent = "Risultati Snippet:";
-    resultsDiv.appendChild(snippetHeader);
-
-    filteredSnippets.forEach(sn => {
-      const snippetElem = document.createElement('div');
-      snippetElem.innerHTML = `
-        <h4>${sn.title}</h4>
-        <p><em>${sn.description}</em></p>
-        <pre>${sn.code}</pre>
-        <hr>
-      `;
-      resultsDiv.appendChild(snippetElem);
-    });
-  }
-
-  // Mostriamo i risultati EA
-  if (filteredEA.length > 0) {
-    const eaHeader = document.createElement('h3');
-    eaHeader.textContent = "Risultati EA:";
-    resultsDiv.appendChild(eaHeader);
-
-    filteredEA.forEach(ea => {
-      const eaElem = document.createElement('div');
-      eaElem.innerHTML = `
-        <h4>${ea.title}</h4>
-        <p><em>${ea.description}</em></p>
-        <pre>${ea.code}</pre>
-        <hr>
-      `;
-      resultsDiv.appendChild(eaElem);
-    });
-  }
+  filtered.forEach(sn => {
+    const snippetElem = document.createElement('div');
+    snippetElem.innerHTML = 
+      <h3>${sn.title}</h3>
+      <p><em>${sn.description}</em></p>
+      <pre>${sn.code}</pre>
+      <hr>
+    ;
+    resultsDiv.appendChild(snippetElem);
+  });
 };
 
 /***********************************************
- * 7) INSERIMENTO SNIPPET / EA (SCRITTURA)
+ * 6) INSERIMENTO SNIPPET (SCRITTURA)
  ***********************************************/
 window.addSnippet = async function() {
-  const titleField       = document.getElementById('titleSnippet');
-  const descriptionField = document.getElementById('descriptionSnippet');
-  const codeField        = document.getElementById('codeSnippet');
-  const infoAdd          = document.getElementById('infoAddSnippet');
+  const titleField       = document.getElementById('title');
+  const descriptionField = document.getElementById('description');
+  const codeField        = document.getElementById('code');
+  const infoAdd          = document.getElementById('infoAdd');
 
   const title       = titleField.value.trim();
   const description = descriptionField.value.trim();
@@ -225,65 +147,30 @@ window.addSnippet = async function() {
     infoAdd.style.color = "green";
     infoAdd.textContent = "Snippet salvato con successo!";
 
+    // Svuota campi
     titleField.value       = "";
     descriptionField.value = "";
     codeField.value        = "";
 
+    // Ricarichiamo i dati e aggiorniamo sidebar
     await loadAllSnippets();
     updateSidebar();
+
   } catch (err) {
-    console.error("Errore salvataggio snippet:", err);
-    infoAdd.style.color = "red";
-    infoAdd.textContent = "Errore durante il salvataggio!";
-  }
-};
-
-window.addEA = async function() {
-  const titleField       = document.getElementById('titleEA');
-  const descriptionField = document.getElementById('descriptionEA');
-  const codeField        = document.getElementById('codeEA');
-  const infoAdd          = document.getElementById('infoAddEA');
-
-  const title       = titleField.value.trim();
-  const description = descriptionField.value.trim();
-  const code        = codeField.value.trim();
-
-  if (!title || !code) {
-    infoAdd.style.color = "red";
-    infoAdd.textContent = "Inserisci almeno un titolo e del codice!";
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "ea"), {
-      title,
-      description,
-      code,
-      createdAt: new Date()
-    });
-    infoAdd.style.color = "green";
-    infoAdd.textContent = "EA salvato con successo!";
-
-    titleField.value       = "";
-    descriptionField.value = "";
-    codeField.value        = "";
-
-    await loadAllEA();
-    updateSidebar();
-  } catch (err) {
-    console.error("Errore salvataggio EA:", err);
+    console.error("Errore salvataggio:", err);
     infoAdd.style.color = "red";
     infoAdd.textContent = "Errore durante il salvataggio!";
   }
 };
 
 /***********************************************
- * 8) AVVIO INIZIALE
+ * 7) AVVIO INIZIALE
  ***********************************************/
 (async function start() {
   try {
+    // Carichiamo tutti gli snippet dal DB
     await loadAllSnippets();
-    await loadAllEA();
+    // Aggiorniamo la sidebar
     updateSidebar();
   } catch (err) {
     console.error("Errore iniziale:", err);
