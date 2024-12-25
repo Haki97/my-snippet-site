@@ -31,6 +31,11 @@ public class FirebaseSnippetManager {
             String snippetId = addSnippet("New Title", "New Description", "New Code");
             System.out.println("Snippet added with ID: " + snippetId);
 
+            // (EXAMPLE) Add a new EA
+            System.out.println("\nAdding a new EA...");
+            String eaId = addEA("EA Title", "EA Description", "EA Comments", "EA Snippet code here");
+            System.out.println("EA added with ID: " + eaId);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,7 +70,8 @@ public class FirebaseSnippetManager {
     /**
      * Add a new snippet to Firestore.
      */
-    private static String addSnippet(String title, String description, String code) throws ExecutionException, InterruptedException {
+    private static String addSnippet(String title, String description, String code)
+            throws ExecutionException, InterruptedException {
         Map<String, Object> snippet = new HashMap<>();
         snippet.put("title", title);
         snippet.put("description", description);
@@ -73,6 +79,23 @@ public class FirebaseSnippetManager {
         snippet.put("createdAt", System.currentTimeMillis());
 
         ApiFuture<DocumentReference> future = db.collection("snippets").add(snippet);
+        return future.get().getId();
+    }
+
+    /**
+     * Add a new EA to Firestore.
+     */
+    private static String addEA(String title, String description, String comments, String snippet)
+            throws ExecutionException, InterruptedException {
+        Map<String, Object> eaDoc = new HashMap<>();
+        eaDoc.put("title", title);
+        eaDoc.put("description", description);
+        eaDoc.put("comments", comments);
+        eaDoc.put("snippet", snippet);
+        eaDoc.put("createdAt", System.currentTimeMillis());
+
+        // We'll store these documents in a collection called "EA"
+        ApiFuture<DocumentReference> future = db.collection("EA").add(eaDoc);
         return future.get().getId();
     }
 
