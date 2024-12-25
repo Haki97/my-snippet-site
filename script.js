@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class SnippetManager {
+public class FirebaseSnippetManager {
     private static Firestore db;
 
     public static void main(String[] args) {
@@ -19,12 +19,17 @@ public class SnippetManager {
             // Initialize Firebase
             initializeFirebase();
 
-            // Test Adding a Snippet
-            addSnippet("Example Title", "Example Description", "Example Code");
-
-            // Fetch and Display All Snippets
+            // Load all snippets
+            System.out.println("Loading all snippets...");
             List<QueryDocumentSnapshot> snippets = getAllSnippets();
-            displaySnippets(snippets);
+            for (QueryDocumentSnapshot snippet : snippets) {
+                displaySnippet(snippet);
+            }
+
+            // Add a new snippet
+            System.out.println("\nAdding a new snippet...");
+            String snippetId = addSnippet("New Title", "New Description", "New Code");
+            System.out.println("Snippet added with ID: " + snippetId);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -32,10 +37,10 @@ public class SnippetManager {
     }
 
     /**
-     * Initialize Firebase Firestore using Service Account Key.
+     * Initialize Firebase Firestore using the Admin SDK.
      */
     private static void initializeFirebase() throws IOException {
-        // Load Service Account Key File
+        // Load the service account key JSON file
         FileInputStream serviceAccount = new FileInputStream("path/to/serviceAccountKey.json");
 
         FirebaseOptions options = new FirebaseOptions.Builder()
@@ -49,61 +54,37 @@ public class SnippetManager {
     }
 
     /**
-     * Add a new snippet to Firestore.
-     *
-     * @param title       Title of the snippet.
-     * @param description Description of the snippet.
-     * @param code        Code content of the snippet.
+     * Retrieve all snippets from Firestore.
      */
-    private static void addSnippet(String title, String description, String code) {
+    private static List<QueryDocumentSnapshot> getAllSnippets() throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> future = db.collection("snippets").get();
+        QuerySnapshot snapshot = future.get();
+        return snapshot.getDocuments();
+    }
+
+    /**
+     * Add a new snippet to Firestore.
+     */
+    private static String addSnippet(String title, String description, String code) throws ExecutionException, InterruptedException {
         Map<String, Object> snippet = new HashMap<>();
         snippet.put("title", title);
         snippet.put("description", description);
         snippet.put("code", code);
         snippet.put("createdAt", System.currentTimeMillis());
 
-        try {
-            ApiFuture<DocumentReference> result = db.collection("snippets").add(snippet);
-            System.out.println("Snippet added with ID: " + result.get().getId());
-        } catch (Exception e) {
-            System.err.println("Error adding snippet: " + e.getMessage());
-        }
+        ApiFuture<DocumentReference> future = db.collection("snippets").add(snippet);
+        return future.get().getId();
     }
 
     /**
-     * Retrieve all snippets from Firestore.
-     *
-     * @return List of all snippets as documents.
+     * Display a single snippet's details.
      */
-    private static List<QueryDocumentSnapshot> getAllSnippets() {
-        try {
-            ApiFuture<QuerySnapshot> future = db.collection("snippets").get();
-            return future.get().getDocuments();
-        } catch (Exception e) {
-            System.err.println("Error fetching snippets: " + e.getMessage());
-            return List.of();
-        }
-    }
-
-    /**
-     * Display a list of snippets in the console.
-     *
-     * @param snippets List of snippets to display.
-     */
-    private static void displaySnippets(List<QueryDocumentSnapshot> snippets) {
-        if (snippets.isEmpty()) {
-            System.out.println("No snippets found.");
-            return;
-        }
-
-        System.out.println("Snippets:");
-        for (QueryDocumentSnapshot doc : snippets) {
-            System.out.println("ID: " + doc.getId());
-            System.out.println("Title: " + doc.getString("title"));
-            System.out.println("Description: " + doc.getString("description"));
-            System.out.println("Code: " + doc.getString("code"));
-            System.out.println("Created At: " + doc.get("createdAt"));
-            System.out.println("--------------------");
-        }
+    private static void displaySnippet(QueryDocumentSnapshot snippet) {
+        System.out.println("Snippet ID: " + snippet.getId());
+        System.out.println("Title: " + snippet.getString("title"));
+        System.out.println("Description: " + snippet.getString("description"));
+        System.out.println("Code: " + snippet.getString("code"));
+        System.out.println("Created At: " + snippet.get("createdAt"));
+        System.out.println("-----------------------------");
     }
 }
