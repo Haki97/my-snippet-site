@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>My Advanced Snippet App</title>
   <style>
-    /* Original CSS remains unchanged */
+    /* CSS remains mostly unchanged */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -55,13 +55,26 @@
     .toggle-btn:hover {
       background: #c0392b;
     }
-    .sidebar.hidden {
-      transform: translateX(-100%);
-    }
     .main {
       flex: 1;
       background: #fff;
       padding: 20px;
+    }
+    .buttons-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .buttons-container button {
+      padding: 8px 12px;
+      border: none;
+      background: #3498db;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .buttons-container button:hover {
+      background: #2980b9;
     }
     .search-bar {
       display: flex;
@@ -147,6 +160,10 @@
     <ul id="snippetIndex"></ul>
   </div>
   <div class="main">
+    <div class="buttons-container">
+      <button onclick="loadAllSnippets()">Snippets</button>
+      <button onclick="loadEaSnippets()">EA</button>
+    </div>
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Cerca snippet (title, desc, code)..." />
       <button onclick="searchLocal()">Cerca</button>
@@ -173,7 +190,7 @@
   <script type="module">
     // Import the Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     // Firebase configuration
     const firebaseConfig = {
@@ -189,7 +206,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Your original JavaScript code with no changes
     let snippetArray = [];
 
     window.toggleSidebar = function () {
@@ -200,6 +216,23 @@
     async function loadAllSnippets() {
       snippetArray = [];
       const snapshot = await getDocs(collection(db, "snippets"));
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        snippetArray.push({
+          id: doc.id,
+          title: data.title || "",
+          description: data.description || "",
+          code: data.code || "",
+          createdAt: data.createdAt,
+        });
+      });
+      updateSidebar();
+    }
+
+    async function loadEaSnippets() {
+      snippetArray = [];
+      const q = query(collection(db, "snippets"), where("type", "==", "EA"));
+      const snapshot = await getDocs(q);
       snapshot.forEach(doc => {
         const data = doc.data();
         snippetArray.push({
@@ -287,6 +320,7 @@
           title,
           description,
           code,
+          type: "snippet", // Default to snippet
           createdAt: new Date(),
         });
         infoAdd.style.color = "green";
