@@ -2,9 +2,9 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>My Advanced Snippet App (Improved)</title>
+  <title>My Advanced Snippet App (Pop-up Version)</title>
   <style>
-    /* Basic Reset */
+    /* Basic reset */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -34,7 +34,7 @@
       display: flex;
     }
 
-    /* Sidebar */
+    /* Sidebar (Category buttons) */
     .sidebar {
       width: 250px;
       background: #34495e;
@@ -58,20 +58,44 @@
       background-color: #27ae60;
     }
 
-    /* Main content area */
+    /* Content area for each category */
     .content {
       flex: 1;
-      padding: 1rem 2rem;
       background: #fff;
+      display: flex;
+      padding: 1rem;
+      gap: 1rem; /* space between index and main form */
     }
 
-    /* By default, hide all sections */
-    .section {
-      display: none;
+    /* Left portion inside content: the "Index" of items */
+    .index-list {
+      flex: 1;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-y: auto; /* in case list is long */
+      max-height: calc(100vh - 200px); /* to keep the index scrollable */
     }
-    /* When we need to show a section, we remove 'display: none' */
-    .section.active {
-      display: block;
+    .index-list h2 {
+      margin-bottom: 0.5rem;
+    }
+    .index-item {
+      padding: 0.5rem;
+      border-bottom: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .index-item:hover {
+      background-color: #eee;
+    }
+    .no-items {
+      font-style: italic;
+      color: #777;
+    }
+
+    /* Right portion inside content: the Search bar + Add Form */
+    .main-panel {
+      flex: 2;
     }
 
     /* Search bar styles */
@@ -101,7 +125,6 @@
     /* Form section styles */
     .form-section {
       margin-top: 1rem;
-      max-width: 600px;
       background: #fafafa;
       border: 1px solid #ddd;
       padding: 1rem;
@@ -145,41 +168,13 @@
       margin-top: 0.5rem;
       min-height: 1.2rem;
     }
-    pre {
-      background: #eee;
-      padding: 0.5rem;
-      border-radius: 4px;
-      white-space: pre-wrap;
-    }
 
-    /* Items list */
-    .item-list {
-      margin-top: 1rem;
+    /* Hide sections by default */
+    .section {
+      display: none;
     }
-    .item {
-      background: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-    .item h3 {
-      margin-bottom: 0.4rem;
-      color: #333;
-    }
-    .item .icon-buttons {
-      display: inline-flex;
-      gap: 8px;
-      margin-left: 10px;
-    }
-    .item .icon-btn {
-      cursor: pointer;
-      text-decoration: none;
-      color: #333;
-      font-size: 1rem;
-    }
-    .item .icon-btn:hover {
-      color: #000;
+    .section.active {
+      display: block;
     }
 
     /* Footer */
@@ -188,6 +183,71 @@
       color: #ecf0f1;
       text-align: center;
       padding: 0.5rem;
+    }
+
+    /* POPUP MODAL */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none; /* hidden by default */
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      width: 500px;
+      max-width: 90%;
+      position: relative;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .modal-close-btn:hover {
+      background: #c0392b;
+    }
+    .modal h3 {
+      margin-bottom: 0.5rem;
+    }
+    .modal p {
+      margin-bottom: 0.5rem;
+    }
+    pre {
+      background: #f0f0f0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      white-space: pre-wrap; /* keep code formatting */
+    }
+
+    /* Icons in the modal for copy/edit/delete */
+    .icon-buttons {
+      display: inline-flex;
+      gap: 8px;
+      margin-left: 0.5rem;
+    }
+    .icon-btn {
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+    .icon-btn:hover {
+      color: #000;
     }
   </style>
 </head>
@@ -204,127 +264,98 @@
       <button onclick="showSection('promptSection')">Prompt</button>
     </div>
 
+    <!-- Right content area with index + main panel -->
     <div class="content">
-      <!-- SNIPPETS SECTION -->
-      <section id="snippetsSection" class="section">
-        <h2>Snippets</h2>
+      <!-- Index of items (most recent first) -->
+      <div class="index-list">
+        <h2 id="indexTitle">Index</h2>
+        <div id="indexContainer">
+          <!-- List of items goes here, sorted by creation date desc -->
+        </div>
+      </div>
 
-        <!-- Search bar for Snippets -->
-        <div class="search-bar">
-          <input type="text" id="snippetSearchInput" placeholder="Cerca snippet (title, desc, code)..." />
-          <button onclick="searchLocalSnippets()">Cerca</button>
-        </div>
-        <div id="snippetSearchResults"></div>
+      <!-- The main panel: search bar + add form -->
+      <div class="main-panel">
+        <!-- SNIPPETS SECTION -->
+        <section id="snippetsSection" class="section">
+          <!-- Search bar -->
+          <div class="search-bar">
+            <input type="text" id="snippetSearchInput" placeholder="Cerca snippet (title, desc, code)..." />
+            <button onclick="searchLocalSnippets()">Cerca</button>
+          </div>
+          <!-- Add new snippet form -->
+          <div class="form-section">
+            <h2>Inserisci Nuovo Snippet</h2>
+            <div class="form-group">
+              <label for="title">Titolo</label>
+              <input type="text" id="title" />
+            </div>
+            <div class="form-group">
+              <label for="description">Descrizione</label>
+              <input type="text" id="description" />
+            </div>
+            <div class="form-group">
+              <label for="code">Codice</label>
+              <textarea id="code" rows="5"></textarea>
+            </div>
+            <button onclick="addSnippet()">Salva Snippet</button>
+            <div class="info-msg" id="infoAdd"></div>
+          </div>
+        </section>
 
-        <!-- Form for adding a new snippet -->
-        <div class="form-section">
-          <h2>Inserisci Nuovo Snippet</h2>
-          <div class="form-group">
-            <label for="title">Titolo</label>
-            <input type="text" id="title" />
+        <!-- EA SECTION -->
+        <section id="eaSection" class="section">
+          <div class="search-bar">
+            <input type="text" id="eaSearchInput" placeholder="Cerca EA (title, desc, code, comments)..." />
+            <button onclick="searchLocalEA()">Cerca</button>
           </div>
-          <div class="form-group">
-            <label for="description">Descrizione</label>
-            <input type="text" id="description" />
+          <div class="form-section">
+            <h2>Inserisci Nuovo EA</h2>
+            <div class="form-group">
+              <label for="eaTitle">Titolo</label>
+              <input type="text" id="eaTitle" />
+            </div>
+            <div class="form-group">
+              <label for="eaDescription">Descrizione</label>
+              <input type="text" id="eaDescription" />
+            </div>
+            <div class="form-group">
+              <label for="eaComments">Commenti</label>
+              <textarea id="eaComments" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="eaSnippet">Snippet</label>
+              <textarea id="eaSnippet" rows="5"></textarea>
+            </div>
+            <button onclick="addEA()">Salva EA</button>
+            <div class="info-msg" id="infoEAAdd"></div>
           </div>
-          <div class="form-group">
-            <label for="code">Codice</label>
-            <textarea id="code" rows="5"></textarea>
-          </div>
-          <button onclick="addSnippet()">Salva Snippet</button>
-          <div class="info-msg" id="infoAdd"></div>
-        </div>
-      </section>
+        </section>
 
-      <!-- EA SECTION -->
-      <section id="eaSection" class="section">
-        <h2>EA Items</h2>
-
-        <!-- Search bar for EA -->
-        <div class="search-bar">
-          <input type="text" id="eaSearchInput" placeholder="Cerca EA (title, desc, code, comments)..." />
-          <button onclick="searchLocalEA()">Cerca</button>
-        </div>
-        <div id="eaSearchResults"></div>
-
-        <!-- Form for adding a new EA -->
-        <div class="form-section">
-          <h2>Inserisci Nuovo EA</h2>
-          <div class="form-group">
-            <label for="eaTitle">Titolo</label>
-            <input type="text" id="eaTitle" />
+        <!-- PROMPT SECTION -->
+        <section id="promptSection" class="section">
+          <div class="search-bar">
+            <input type="text" id="promptSearchInput" placeholder="Cerca prompt (title, desc, snippet)..." />
+            <button onclick="searchLocalPrompt()">Cerca</button>
           </div>
-          <div class="form-group">
-            <label for="eaDescription">Descrizione</label>
-            <input type="text" id="eaDescription" />
+          <div class="form-section">
+            <h2>Inserisci Nuovo Prompt</h2>
+            <div class="form-group">
+              <label for="promptTitle">Titolo</label>
+              <input type="text" id="promptTitle" />
+            </div>
+            <div class="form-group">
+              <label for="promptDescription">Descrizione</label>
+              <input type="text" id="promptDescription" />
+            </div>
+            <div class="form-group">
+              <label for="promptSnippet">Prompt Content</label>
+              <textarea id="promptSnippet" rows="5"></textarea>
+            </div>
+            <button onclick="addPrompt()">Salva Prompt</button>
+            <div class="info-msg" id="infoPromptAdd"></div>
           </div>
-          <div class="form-group">
-            <label for="eaComments">Commenti</label>
-            <textarea id="eaComments" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="eaSnippet">Snippet</label>
-            <textarea id="eaSnippet" rows="5"></textarea>
-          </div>
-          <button onclick="addEA()">Salva EA</button>
-          <div class="info-msg" id="infoEAAdd"></div>
-        </div>
-      </section>
-
-      <!-- PROMPT SECTION -->
-      <section id="promptSection" class="section">
-        <h2>Prompts</h2>
-
-        <!-- Search bar for Prompts -->
-        <div class="search-bar">
-          <input type="text" id="promptSearchInput" placeholder="Cerca prompt (title, desc)..." />
-          <button onclick="searchLocalPrompt()">Cerca</button>
-        </div>
-        <div id="promptSearchResults"></div>
-
-        <!-- Form for adding a new Prompt -->
-        <div class="form-section">
-          <h2>Inserisci Nuovo Prompt</h2>
-          <div class="form-group">
-            <label for="promptTitle">Titolo</label>
-            <input type="text" id="promptTitle" />
-          </div>
-          <div class="form-group">
-            <label for="promptDescription">Descrizione</label>
-            <input type="text" id="promptDescription" />
-          </div>
-          <div class="form-group">
-            <label for="promptSnippet">Prompt Content</label>
-            <textarea id="promptSnippet" rows="5"></textarea>
-          </div>
-          <button onclick="addPrompt()">Salva Prompt</button>
-          <div class="info-msg" id="infoPromptAdd"></div>
-        </div>
-      </section>
-
-      <!-- SHARED EDIT SECTION (for Snippet, EA, or Prompt) -->
-      <div class="form-section section" id="editFormSection">
-        <h2>Modifica Elemento</h2>
-        <input type="hidden" id="editId" />
-        <input type="hidden" id="editType" />
-        <div class="form-group">
-          <label for="editTitle">Titolo</label>
-          <input type="text" id="editTitle" />
-        </div>
-        <div class="form-group">
-          <label for="editDescription">Descrizione</label>
-          <input type="text" id="editDescription" />
-        </div>
-        <div class="form-group" id="editCommentsGroup" style="display: none;">
-          <label for="editComments">Commenti (solo EA)</label>
-          <textarea id="editComments" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="editCode">Codice/Snippet</label>
-          <textarea id="editCode" rows="5"></textarea>
-        </div>
-        <button onclick="saveEdits()">Salva Modifiche</button>
-        <div class="info-msg" id="infoEdit"></div>
+        </section>
       </div>
     </div>
   </main>
@@ -332,6 +363,14 @@
   <footer>
     <p>© 2025 My Snippet Library</p>
   </footer>
+
+  <!-- POPUP MODAL (for displaying item details, copy/edit/delete) -->
+  <div class="modal" id="itemModal">
+    <div class="modal-content" id="itemModalContent">
+      <button class="modal-close-btn" onclick="closeModal()">X</button>
+      <!-- We'll dynamically fill this content -->
+    </div>
+  </div>
 
   <!-- Firebase + Firestore imports -->
   <script type="module">
@@ -343,10 +382,10 @@
       getDocs, 
       doc, 
       updateDoc, 
-      deleteDoc 
+      deleteDoc
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    // Firebase configuration
+    // Firebase config
     const firebaseConfig = {
       apiKey: "YOUR-API-KEY-HERE",
       authDomain: "my-snippet-project-a84b5.firebaseapp.com",
@@ -360,41 +399,33 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // We'll store everything in a single array for convenience:
-    //  type can be "snippet", "EA", or "prompt"
+    // We'll store all items in one array (type = snippet, EA, or prompt)
     let itemArray = [];
 
-    /* ========== UI NAVIGATION ========== */
+    /* ========== NAVIGATION & UI SECTIONS ========== */
     window.showSection = function (sectionId) {
-      // Hide all "section" elements
+      // Hide all sections
       document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-      // Also hide the edit form if it's visible
-      document.getElementById('editFormSection').classList.remove('active');
-
-      // Show the requested section
+      // Show only the targeted section
       const target = document.getElementById(sectionId);
       if (target) {
         target.classList.add('active');
       }
-
-      // If needed, load data specifically
-      if (sectionId === 'snippetsSection') {
-        loadAllData(); // We can re-load everything, then only show snippet's result
-        renderSnippets();
-      } else if (sectionId === 'eaSection') {
-        loadAllData();
-        renderEAs();
-      } else if (sectionId === 'promptSection') {
-        loadAllData();
-        renderPrompts();
-      }
+      // Re-load items from Firestore & re-render index + any relevant content
+      loadAllData().then(() => {
+        renderIndex(); 
+        // Optionally re-render the specific list if needed (like search results)
+        if (sectionId === 'snippetsSection') searchLocalSnippets(true);
+        if (sectionId === 'eaSection') searchLocalEA(true);
+        if (sectionId === 'promptSection') searchLocalPrompt(true);
+      });
     };
 
-    /* ========== LOAD DATA (SNIPPETS, EA, PROMPT) ========== */
+    /* ========== LOAD DATA (Snippets, EA, Prompt) ========== */
     async function loadAllData() {
       itemArray = [];
 
-      // Load from "snippets"
+      // SNIPPETS
       const snippetSnap = await getDocs(collection(db, "snippets"));
       snippetSnap.forEach(docSnap => {
         const data = docSnap.data();
@@ -404,12 +435,12 @@
           title: data.title || "",
           description: data.description || "",
           code: data.code || "",
-          comments: "",
-          createdAt: data.createdAt
+          comments: "", 
+          createdAt: data.createdAt ? new Date(data.createdAt) : new Date()
         });
       });
 
-      // Load from "EA"
+      // EA
       const eaSnap = await getDocs(collection(db, "EA"));
       eaSnap.forEach(docSnap => {
         const data = docSnap.data();
@@ -420,11 +451,11 @@
           description: data.description || "",
           code: data.snippet || "",
           comments: data.comments || "",
-          createdAt: data.createdAt
+          createdAt: data.createdAt ? new Date(data.createdAt) : new Date()
         });
       });
 
-      // Load from "prompt"
+      // PROMPT
       const promptSnap = await getDocs(collection(db, "prompt"));
       promptSnap.forEach(docSnap => {
         const data = docSnap.data();
@@ -435,222 +466,131 @@
           description: data.description || "",
           code: data.snippet || "",
           comments: "",
-          createdAt: data.createdAt
+          createdAt: data.createdAt ? new Date(data.createdAt) : new Date()
         });
       });
+
+      // Sort by createdAt descending
+      itemArray.sort((a, b) => b.createdAt - a.createdAt);
     }
 
-    /* ========== RENDERING FUNCTIONS ========== */
-    function renderSnippets() {
-      const resultsDiv = document.getElementById('snippetSearchResults');
-      resultsDiv.innerHTML = "";
+    /* ========== RENDER INDEX (LEFT LIST) ========== */
+    function renderIndex() {
+      const container = document.getElementById('indexContainer');
+      container.innerHTML = "";
 
-      // Filter only snippet type
-      const filtered = itemArray.filter(item => item.type === "snippet");
-      if (!filtered.length) {
-        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
+      // Filter items based on active section
+      const activeSection = document.querySelector('.section.active');
+      if (!activeSection) {
+        container.innerHTML = "<p class='no-items'>Nessuna sezione selezionata.</p>";
         return;
       }
 
-      filtered.forEach(snippet => {
-        const div = document.createElement('div');
-        div.classList.add('item');
-        div.innerHTML = `
-          <h3>${snippet.title}
-            <span class="icon-buttons">
-              <span class="icon-btn" title="Copia" onclick="copyItem('${snippet.id}')">📋</span>
-              <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
-              <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
-            </span>
-          </h3>
-          <p><em>${snippet.description}</em></p>
-          <pre>${snippet.code}</pre>
-        `;
-        resultsDiv.appendChild(div);
-      });
-    }
+      let currentType = "";
+      if (activeSection.id === 'snippetsSection') currentType = "snippet";
+      else if (activeSection.id === 'eaSection') currentType = "EA";
+      else if (activeSection.id === 'promptSection') currentType = "prompt";
 
-    function renderEAs() {
-      const resultsDiv = document.getElementById('eaSearchResults');
-      resultsDiv.innerHTML = "";
-
-      // Filter only EA type
-      const filtered = itemArray.filter(item => item.type === "EA");
+      const filtered = itemArray.filter(it => it.type === currentType);
       if (!filtered.length) {
-        resultsDiv.innerHTML = "<p>Nessun EA trovato.</p>";
+        container.innerHTML = "<p class='no-items'>Nessun elemento trovato.</p>";
         return;
       }
 
-      filtered.forEach(ea => {
+      filtered.forEach(item => {
         const div = document.createElement('div');
-        div.classList.add('item');
-        div.innerHTML = `
-          <h3>${ea.title}
-            <span class="icon-buttons">
-              <span class="icon-btn" title="Copia" onclick="copyItem('${ea.id}')">📋</span>
-              <span class="icon-btn" title="Modifica" onclick="editItem('${ea.id}')">✏️</span>
-              <span class="icon-btn" title="Elimina" onclick="deleteItem('${ea.id}')">🗑️</span>
-            </span>
-          </h3>
-          <p><em>${ea.description}</em></p>
-          <p><strong>Commenti:</strong> ${ea.comments}</p>
-          <pre>${ea.code}</pre>
-        `;
-        resultsDiv.appendChild(div);
+        div.className = "index-item";
+        div.textContent = item.title || "(Senza Titolo)";
+        div.onclick = () => openModal(item.id);
+        container.appendChild(div);
       });
     }
 
-    function renderPrompts() {
-      const resultsDiv = document.getElementById('promptSearchResults');
-      resultsDiv.innerHTML = "";
+    /* ========== OPEN / CLOSE MODAL ========== */
+    function openModal(itemId) {
+      const item = getItemById(itemId);
+      if (!item) return;
 
-      // Filter only prompt type
-      const filtered = itemArray.filter(item => item.type === "prompt");
-      if (!filtered.length) {
-        resultsDiv.innerHTML = "<p>Nessun Prompt trovato.</p>";
-        return;
+      const modal = document.getElementById('itemModal');
+      const content = document.getElementById('itemModalContent');
+
+      // Clear existing content (except close button)
+      content.innerHTML = `<button class="modal-close-btn" onclick="closeModal()">X</button>`; 
+
+      // Build new content
+      let html = `
+        <h3>${item.title}
+          <span class="icon-buttons">
+            <span class="icon-btn" title="Copia" onclick="copyItem('${item.id}')">📋</span>
+            <span class="icon-btn" title="Modifica" onclick="editItem('${item.id}')">✏️</span>
+            <span class="icon-btn" title="Elimina" onclick="deleteItem('${item.id}')">🗑️</span>
+          </span>
+        </h3>
+        <p><strong>Descrizione:</strong> ${item.description || ""}</p>
+      `;
+
+      if (item.type === "EA" && item.comments) {
+        html += `<p><strong>Commenti:</strong> ${item.comments}</p>`;
+      }
+      if (item.type === "prompt") {
+        html += `<p><strong>Prompt:</strong></p>`;
+      } else if (item.type === "snippet") {
+        html += `<p><strong>Codice:</strong></p>`;
       }
 
-      filtered.forEach(prompt => {
-        const div = document.createElement('div');
-        div.classList.add('item');
-        div.innerHTML = `
-          <h3>${prompt.title}
-            <span class="icon-buttons">
-              <span class="icon-btn" title="Copia" onclick="copyItem('${prompt.id}')">📋</span>
-              <span class="icon-btn" title="Modifica" onclick="editItem('${prompt.id}')">✏️</span>
-              <span class="icon-btn" title="Elimina" onclick="deleteItem('${prompt.id}')">🗑️</span>
-            </span>
-          </h3>
-          <p><em>${prompt.description}</em></p>
-          <pre>${prompt.code}</pre>
-        `;
-        resultsDiv.appendChild(div);
-      });
+      html += `<pre>${item.code}</pre>`;
+
+      // Insert
+      content.innerHTML += html;
+
+      // Show the modal
+      modal.classList.add('active');
     }
+
+    window.closeModal = function() {
+      const modal = document.getElementById('itemModal');
+      modal.classList.remove('active');
+    };
 
     /* ========== SEARCH FUNCTIONS ========== */
-    window.searchLocalSnippets = function() {
+    // We re-use the existing itemArray, but only show results in the console or do minimal feedback.
+    // The main difference: now the actual detail is in the pop-up, so we won't render them in the main panel.
+
+    // "Immediate" means we skip re-rendering the detail list between searches, we only update the index
+    function searchLocalSnippets(immediate=false) {
       const input = document.getElementById('snippetSearchInput').value.trim().toLowerCase();
-      const resultsDiv = document.getElementById('snippetSearchResults');
-      resultsDiv.innerHTML = "";
+      // If immediate, just re-render the index:
+      renderIndex(); 
+      if (!input) return; // no filter
+      // We can filter itemArray or highlight in the index...
+      // For simplicity, let's highlight or remove items not matching:
+      filterIndex("snippet", input);
+    }
 
-      if (!input) {
-        renderSnippets();
-        return;
-      }
-
-      const filtered = itemArray.filter(item => 
-        item.type === "snippet" &&
-        (item.title.toLowerCase().includes(input) ||
-         (item.description && item.description.toLowerCase().includes(input)) ||
-         (item.code && item.code.toLowerCase().includes(input)))
-      );
-
-      if (filtered.length === 0) {
-        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
-        return;
-      }
-
-      filtered.forEach(snippet => {
-        const div = document.createElement('div');
-        div.classList.add('item');
-        div.innerHTML = `
-          <h3>${snippet.title}
-            <span class="icon-buttons">
-              <span class="icon-btn" title="Copia" onclick="copyItem('${snippet.id}')">📋</span>
-              <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
-              <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
-            </span>
-          </h3>
-          <p><em>${snippet.description}</em></p>
-          <pre>${snippet.code}</pre>
-        `;
-        resultsDiv.appendChild(div);
-      });
-    };
-
-    window.searchLocalEA = function() {
+    function searchLocalEA(immediate=false) {
       const input = document.getElementById('eaSearchInput').value.trim().toLowerCase();
-      const resultsDiv = document.getElementById('eaSearchResults');
-      resultsDiv.innerHTML = "";
+      renderIndex();
+      if (!input) return;
+      filterIndex("EA", input);
+    }
 
-      if (!input) {
-        renderEAs();
-        return;
-      }
-
-      const filtered = itemArray.filter(item => 
-        item.type === "EA" &&
-        (item.title.toLowerCase().includes(input) ||
-         (item.description && item.description.toLowerCase().includes(input)) ||
-         (item.code && item.code.toLowerCase().includes(input)) ||
-         (item.comments && item.comments.toLowerCase().includes(input)))
-      );
-
-      if (filtered.length === 0) {
-        resultsDiv.innerHTML = "<p>Nessun EA trovato.</p>";
-        return;
-      }
-
-      filtered.forEach(ea => {
-        const div = document.createElement('div');
-        div.classList.add('item');
-        div.innerHTML = `
-          <h3>${ea.title}
-            <span class="icon-buttons">
-              <span class="icon-btn" title="Copia" onclick="copyItem('${ea.id}')">📋</span>
-              <span class="icon-btn" title="Modifica" onclick="editItem('${ea.id}')">✏️</span>
-              <span class="icon-btn" title="Elimina" onclick="deleteItem('${ea.id}')">🗑️</span>
-            </span>
-          </h3>
-          <p><em>${ea.description}</em></p>
-          <p><strong>Commenti:</strong> ${ea.comments}</p>
-          <pre>${ea.code}</pre>
-        `;
-        resultsDiv.appendChild(div);
-      });
-    };
-
-    window.searchLocalPrompt = function() {
+    function searchLocalPrompt(immediate=false) {
       const input = document.getElementById('promptSearchInput').value.trim().toLowerCase();
-      const resultsDiv = document.getElementById('promptSearchResults');
-      resultsDiv.innerHTML = "";
+      renderIndex();
+      if (!input) return;
+      filterIndex("prompt", input);
+    }
 
-      if (!input) {
-        renderPrompts();
-        return;
-      }
-
-      const filtered = itemArray.filter(item => 
-        item.type === "prompt" &&
-        (item.title.toLowerCase().includes(input) ||
-         (item.description && item.description.toLowerCase().includes(input)) ||
-         (item.code && item.code.toLowerCase().includes(input)))
-      );
-
-      if (filtered.length === 0) {
-        resultsDiv.innerHTML = "<p>Nessun Prompt trovato.</p>";
-        return;
-      }
-
-      filtered.forEach(prompt => {
-        const div = document.createElement('div');
-        div.classList.add('item');
-        div.innerHTML = `
-          <h3>${prompt.title}
-            <span class="icon-buttons">
-              <span class="icon-btn" title="Copia" onclick="copyItem('${prompt.id}')">📋</span>
-              <span class="icon-btn" title="Modifica" onclick="editItem('${prompt.id}')">✏️</span>
-              <span class="icon-btn" title="Elimina" onclick="deleteItem('${prompt.id}')">🗑️</span>
-            </span>
-          </h3>
-          <p><em>${prompt.description}</em></p>
-          <pre>${prompt.code}</pre>
-        `;
-        resultsDiv.appendChild(div);
+    function filterIndex(itemType, query) {
+      const container = document.getElementById('indexContainer');
+      const children = container.querySelectorAll('.index-item');
+      children.forEach(div => {
+        const txt = div.textContent.toLowerCase();
+        if (!txt.includes(query)) {
+          div.style.display = 'none';
+        }
       });
-    };
+    }
 
     /* ========== ADD NEW ITEMS ========== */
     window.addSnippet = async function () {
@@ -683,7 +623,7 @@
         codeField.value = "";
 
         await loadAllData();
-        renderSnippets();
+        renderIndex();
 
       } catch (err) {
         console.error("Errore durante il salvataggio:", err);
@@ -726,7 +666,7 @@
         eaSnippetField.value = "";
 
         await loadAllData();
-        renderEAs();
+        renderIndex();
 
       } catch (err) {
         console.error("Errore durante il salvataggio EA:", err);
@@ -765,7 +705,7 @@
         promptSnippetField.value = "";
 
         await loadAllData();
-        renderPrompts();
+        renderIndex();
 
       } catch (err) {
         console.error("Errore durante il salvataggio Prompt:", err);
@@ -795,81 +735,60 @@
     window.editItem = function(itemId) {
       const item = getItemById(itemId);
       if (!item) return;
+      closeModal(); // close the viewing modal
 
-      // Show the edit form
-      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-      document.getElementById('editFormSection').classList.add('active');
+      // We can re-use the same approach from your previous code or open another small modal for editing.
+      // For clarity, let's just do a prompt-based edit. 
+      // (You can implement a separate "edit" modal if you wish.)
 
-      // Fill hidden fields
-      document.getElementById('editId').value = item.id;
-      document.getElementById('editType').value = item.type;
-
-      // Fill visible fields
-      document.getElementById('editTitle').value = item.title;
-      document.getElementById('editDescription').value = item.description;
-      document.getElementById('editCode').value = item.code;
-      document.getElementById('editComments').value = item.comments || "";
-
-      // Show comments only if EA
-      const editCommentsGroup = document.getElementById('editCommentsGroup');
+      const newTitle = prompt("Nuovo Titolo:", item.title);
+      if (newTitle === null) return; // user cancelled
+      const newDescription = prompt("Nuova Descrizione:", item.description);
+      if (newDescription === null) return;
+      let newComments = item.comments || "";
+      let newCode = item.code;
       if (item.type === "EA") {
-        editCommentsGroup.style.display = "block";
-      } else {
-        editCommentsGroup.style.display = "none";
+        newComments = prompt("Nuovi Commenti (EA):", item.comments);
+        if (newComments === null) return;
       }
-    };
 
-    window.saveEdits = async function() {
-      const infoEdit = document.getElementById('infoEdit');
-      const editId = document.getElementById('editId').value;
-      const editType = document.getElementById('editType').value;
-      const newTitle = document.getElementById('editTitle').value.trim();
-      const newDescription = document.getElementById('editDescription').value.trim();
-      const newCode = document.getElementById('editCode').value.trim();
-      const newComments = document.getElementById('editComments').value.trim();
+      newCode = prompt("Nuovo Codice/Snippet:", item.code);
+      if (newCode === null) return;
 
+      // Validate
       if (!newTitle || !newCode) {
-        infoEdit.style.color = "red";
-        infoEdit.textContent = "Titolo e codice/snippet sono obbligatori!";
+        alert("Titolo e codice/snippet sono obbligatori!");
         return;
       }
 
-      try {
-        if (editType === "snippet") {
-          await updateDoc(doc(db, "snippets", editId), {
-            title: newTitle,
-            description: newDescription,
-            code: newCode
-          });
-        } else if (editType === "EA") {
-          await updateDoc(doc(db, "EA", editId), {
-            title: newTitle,
-            description: newDescription,
-            snippet: newCode,
-            comments: newComments
-          });
-        } else if (editType === "prompt") {
-          await updateDoc(doc(db, "prompt", editId), {
-            title: newTitle,
-            description: newDescription,
-            snippet: newCode
-          });
-        }
-
-        infoEdit.style.color = "green";
-        infoEdit.textContent = "Modifica salvata con successo!";
-        await loadAllData();
-
-        // Hide the edit form after a short delay
-        setTimeout(() => {
-          document.getElementById('editFormSection').classList.remove('active');
-          infoEdit.textContent = "";
-        }, 800);
-
-      } catch (err) {
-        console.error("Errore durante la modifica:", err);
-        infoEdit.style.color = "red";
-        infoEdit.textContent = "Errore durante la modifica!";
+      if (item.type === 'snippet') {
+        updateDoc(doc(db, "snippets", item.id), {
+          title: newTitle,
+          description: newDescription,
+          code: newCode
+        }).then(() => {
+          alert("Snippet aggiornato!");
+          loadAllData().then(renderIndex);
+        }).catch(e => alert("Errore aggiornamento snippet: " + e));
+      } else if (item.type === 'EA') {
+        updateDoc(doc(db, "EA", item.id), {
+          title: newTitle,
+          description: newDescription,
+          snippet: newCode,
+          comments: newComments
+        }).then(() => {
+          alert("EA aggiornato!");
+          loadAllData().then(renderIndex);
+        }).catch(e => alert("Errore aggiornamento EA: " + e));
+      } else if (item.type === 'prompt') {
+        updateDoc(doc(db, "prompt", item.id), {
+          title: newTitle,
+          description: newDescription,
+          snippet: newCode
+        }).then(() => {
+          alert("Prompt aggiornato!");
+          loadAllData().then(renderIndex);
+        }).catch(e => alert("Errore aggiornamento prompt: " + e));
       }
     };
 
@@ -889,21 +808,17 @@
           await deleteDoc(doc(db, "prompt", item.id));
         }
         alert("Elemento eliminato con successo!");
+        closeModal();
         await loadAllData();
-
-        // If you're in the snippet section, re-render
-        if (item.type === 'snippet') renderSnippets();
-        else if (item.type === 'EA') renderEAs();
-        else renderPrompts();
-
+        renderIndex();
       } catch (err) {
         console.error("Errore durante l'eliminazione:", err);
         alert("Errore durante l'eliminazione!");
       }
     };
 
-    // INITIAL LOAD (nothing shown until user clicks a section)
-    // If you want to show Snippets by default, uncomment the line below:
+    // Start with an empty UI until a user clicks a section
+    // If you want to open Snippets by default, uncomment:
     // showSection('snippetsSection');
   </script>
 </body>
