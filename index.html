@@ -2,66 +2,76 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>My Advanced Snippet App</title>
+  <title>My Advanced Snippet App (Improved)</title>
   <style>
-    /* Original CSS remains mostly unchanged */
+    /* Basic Reset */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       background: #f0f0f0;
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
     }
+
+    /* Header */
+    header {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      padding: 1rem;
+    }
+    header h1 {
+      margin: 0;
+    }
+
+    /* Main layout: sidebar + content */
+    main {
+      flex: 1;
+      display: flex;
+    }
+
+    /* Sidebar */
     .sidebar {
       width: 250px;
-      background: #2c3e50;
-      color: #ecf0f1;
-      padding: 10px;
-      transition: transform 0.3s ease;
-    }
-    .sidebar h2 {
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-    .sidebar ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    .sidebar li {
       background: #34495e;
-      margin-bottom: 8px;
-      padding: 8px;
-      border-radius: 4px;
-      cursor: pointer;
+      color: #ecf0f1;
+      padding: 1rem;
     }
-    .sidebar li:hover {
-      background: #3b536b;
-    }
-    .toggle-btn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: #e74c3c;
-      color: #fff;
+    .sidebar button {
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
       border: none;
-      padding: 8px 12px;
-      cursor: pointer;
       border-radius: 4px;
+      cursor: pointer;
+      background-color: #2ecc71;
+      color: #fff;
+      transition: background-color 0.3s;
     }
-    .toggle-btn:hover {
-      background: #c0392b;
+    .sidebar button:hover {
+      background-color: #27ae60;
     }
-    .sidebar.hidden {
-      transform: translateX(-100%);
-    }
-    .main {
+
+    /* Main content area */
+    .content {
       flex: 1;
+      padding: 1rem 2rem;
       background: #fff;
-      padding: 20px;
+    }
+
+    /* By default, hide all sections */
+    .section {
+      display: none;
+    }
+    /* When we need to show a section, we remove 'display: none' */
+    .section.active {
+      display: block;
     }
 
     /* Search bar styles */
@@ -90,10 +100,9 @@
 
     /* Form section styles */
     .form-section {
-      margin-top: 2rem;
+      margin-top: 1rem;
       max-width: 600px;
-      margin: 2rem auto;
-      background: #f9f9f9;
+      background: #fafafa;
       border: 1px solid #ddd;
       padding: 1rem;
       border-radius: 8px;
@@ -143,156 +152,189 @@
       white-space: pre-wrap;
     }
 
-    /* Hide sections by default */
-    .hidden {
-      display: none;
+    /* Items list */
+    .item-list {
+      margin-top: 1rem;
     }
-
-    /* "+" button styling (for snippets) */
-    .add-snippet-btn {
-      background: #2ecc71;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      font-size: 24px;
-      cursor: pointer;
-      outline: none;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      margin-right: 10px; /* spacing from the next button */
+    .item {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1rem;
     }
-    .add-snippet-btn:hover {
-      background: #27ae60;
+    .item h3 {
+      margin-bottom: 0.4rem;
+      color: #333;
     }
-
-    /* "Add EA" button styling */
-    .add-ea-btn {
-      background: #9b59b6;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      outline: none;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .add-ea-btn:hover {
-      background: #8e44ad;
-    }
-
-    /* Icons next to the title in the detail view */
-    .icon-buttons {
+    .item .icon-buttons {
       display: inline-flex;
       gap: 8px;
-      margin-left: 1rem; /* space from the title */
+      margin-left: 10px;
     }
-    .icon-btn {
+    .item .icon-btn {
       cursor: pointer;
       text-decoration: none;
       color: #333;
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
-    .icon-btn:hover {
+    .item .icon-btn:hover {
       color: #000;
     }
 
+    /* Footer */
+    footer {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      text-align: center;
+      padding: 0.5rem;
+    }
   </style>
 </head>
 <body>
-  <button class="toggle-btn" onclick="toggleSidebar()">Menu</button>
-  <div class="sidebar" id="sidebar">
-    <h2>Elenco Snippet</h2>
-    <ul id="snippetIndex"></ul>
-  </div>
-  <div class="main">
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Cerca snippet (title, desc, code)..." />
-      <button onclick="searchLocal()">Cerca</button>
-    </div>
-    <div id="searchResults"></div>
+  <header>
+    <h1>My Advanced Snippet App</h1>
+  </header>
 
-    <!-- Buttons to show/hide each form -->
-    <button class="add-snippet-btn" onclick="toggleFormSection('snippetFormSection')">+</button>
-    <button class="add-ea-btn" onclick="toggleFormSection('eaFormSection')">EA</button>
-
-    <!-- Snippet form (hidden by default) -->
-    <div class="form-section hidden" id="snippetFormSection">
-      <h2>Inserisci Nuovo Snippet</h2>
-      <div class="form-group">
-        <label for="title">Titolo</label>
-        <input type="text" id="title" />
-      </div>
-      <div class="form-group">
-        <label for="description">Descrizione</label>
-        <input type="text" id="description" />
-      </div>
-      <div class="form-group">
-        <label for="code">Codice</label>
-        <textarea id="code" rows="5"></textarea>
-      </div>
-      <button onclick="addSnippet()">Salva Snippet</button>
-      <div class="info-msg" id="infoAdd"></div>
+  <main>
+    <!-- Sidebar with category buttons -->
+    <div class="sidebar">
+      <button onclick="showSection('snippetsSection')">Snippets</button>
+      <button onclick="showSection('eaSection')">EA</button>
+      <button onclick="showSection('promptSection')">Prompt</button>
     </div>
 
-    <!-- EA form (hidden by default) -->
-    <div class="form-section hidden" id="eaFormSection">
-      <h2>Inserisci Nuovo EA</h2>
-      <div class="form-group">
-        <label for="eaTitle">Titolo</label>
-        <input type="text" id="eaTitle" />
-      </div>
-      <div class="form-group">
-        <label for="eaDescription">Descrizione</label>
-        <input type="text" id="eaDescription" />
-      </div>
-      <div class="form-group">
-        <label for="eaComments">Commenti</label>
-        <textarea id="eaComments" rows="3"></textarea>
-      </div>
-      <div class="form-group">
-        <label for="eaSnippet">Snippet</label>
-        <textarea id="eaSnippet" rows="5"></textarea>
-      </div>
-      <button onclick="addEA()">Salva EA</button>
-      <div class="info-msg" id="infoEAAdd"></div>
-    </div>
+    <div class="content">
+      <!-- SNIPPETS SECTION -->
+      <section id="snippetsSection" class="section">
+        <h2>Snippets</h2>
 
-    <!-- Hidden form for editing (shared for snippet or EA) -->
-    <div class="form-section hidden" id="editFormSection">
-      <h2>Modifica Elemento</h2>
-      <input type="hidden" id="editId" />
-      <input type="hidden" id="editType" />
-      <div class="form-group">
-        <label for="editTitle">Titolo</label>
-        <input type="text" id="editTitle" />
-      </div>
-      <div class="form-group">
-        <label for="editDescription">Descrizione</label>
-        <input type="text" id="editDescription" />
-      </div>
-      <div class="form-group hidden" id="editCommentsGroup">
-        <label for="editComments">Commenti (solo EA)</label>
-        <textarea id="editComments" rows="3"></textarea>
-      </div>
-      <div class="form-group">
-        <label for="editCode">Codice/Snippet</label>
-        <textarea id="editCode" rows="5"></textarea>
-      </div>
-      <button onclick="saveEdits()">Salva Modifiche</button>
-      <div class="info-msg" id="infoEdit"></div>
-    </div>
-  </div>
+        <!-- Search bar for Snippets -->
+        <div class="search-bar">
+          <input type="text" id="snippetSearchInput" placeholder="Cerca snippet (title, desc, code)..." />
+          <button onclick="searchLocalSnippets()">Cerca</button>
+        </div>
+        <div id="snippetSearchResults"></div>
 
+        <!-- Form for adding a new snippet -->
+        <div class="form-section">
+          <h2>Inserisci Nuovo Snippet</h2>
+          <div class="form-group">
+            <label for="title">Titolo</label>
+            <input type="text" id="title" />
+          </div>
+          <div class="form-group">
+            <label for="description">Descrizione</label>
+            <input type="text" id="description" />
+          </div>
+          <div class="form-group">
+            <label for="code">Codice</label>
+            <textarea id="code" rows="5"></textarea>
+          </div>
+          <button onclick="addSnippet()">Salva Snippet</button>
+          <div class="info-msg" id="infoAdd"></div>
+        </div>
+      </section>
+
+      <!-- EA SECTION -->
+      <section id="eaSection" class="section">
+        <h2>EA Items</h2>
+
+        <!-- Search bar for EA -->
+        <div class="search-bar">
+          <input type="text" id="eaSearchInput" placeholder="Cerca EA (title, desc, code, comments)..." />
+          <button onclick="searchLocalEA()">Cerca</button>
+        </div>
+        <div id="eaSearchResults"></div>
+
+        <!-- Form for adding a new EA -->
+        <div class="form-section">
+          <h2>Inserisci Nuovo EA</h2>
+          <div class="form-group">
+            <label for="eaTitle">Titolo</label>
+            <input type="text" id="eaTitle" />
+          </div>
+          <div class="form-group">
+            <label for="eaDescription">Descrizione</label>
+            <input type="text" id="eaDescription" />
+          </div>
+          <div class="form-group">
+            <label for="eaComments">Commenti</label>
+            <textarea id="eaComments" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="eaSnippet">Snippet</label>
+            <textarea id="eaSnippet" rows="5"></textarea>
+          </div>
+          <button onclick="addEA()">Salva EA</button>
+          <div class="info-msg" id="infoEAAdd"></div>
+        </div>
+      </section>
+
+      <!-- PROMPT SECTION -->
+      <section id="promptSection" class="section">
+        <h2>Prompts</h2>
+
+        <!-- Search bar for Prompts -->
+        <div class="search-bar">
+          <input type="text" id="promptSearchInput" placeholder="Cerca prompt (title, desc)..." />
+          <button onclick="searchLocalPrompt()">Cerca</button>
+        </div>
+        <div id="promptSearchResults"></div>
+
+        <!-- Form for adding a new Prompt -->
+        <div class="form-section">
+          <h2>Inserisci Nuovo Prompt</h2>
+          <div class="form-group">
+            <label for="promptTitle">Titolo</label>
+            <input type="text" id="promptTitle" />
+          </div>
+          <div class="form-group">
+            <label for="promptDescription">Descrizione</label>
+            <input type="text" id="promptDescription" />
+          </div>
+          <div class="form-group">
+            <label for="promptSnippet">Prompt Content</label>
+            <textarea id="promptSnippet" rows="5"></textarea>
+          </div>
+          <button onclick="addPrompt()">Salva Prompt</button>
+          <div class="info-msg" id="infoPromptAdd"></div>
+        </div>
+      </section>
+
+      <!-- SHARED EDIT SECTION (for Snippet, EA, or Prompt) -->
+      <div class="form-section section" id="editFormSection">
+        <h2>Modifica Elemento</h2>
+        <input type="hidden" id="editId" />
+        <input type="hidden" id="editType" />
+        <div class="form-group">
+          <label for="editTitle">Titolo</label>
+          <input type="text" id="editTitle" />
+        </div>
+        <div class="form-group">
+          <label for="editDescription">Descrizione</label>
+          <input type="text" id="editDescription" />
+        </div>
+        <div class="form-group" id="editCommentsGroup" style="display: none;">
+          <label for="editComments">Commenti (solo EA)</label>
+          <textarea id="editComments" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="editCode">Codice/Snippet</label>
+          <textarea id="editCode" rows="5"></textarea>
+        </div>
+        <button onclick="saveEdits()">Salva Modifiche</button>
+        <div class="info-msg" id="infoEdit"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 My Snippet Library</p>
+  </footer>
+
+  <!-- Firebase + Firestore imports -->
   <script type="module">
-    // Import the Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { 
       getFirestore, 
@@ -318,26 +360,45 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Single array to store both Snippets and EA items
-    let snippetArray = [];
+    // We'll store everything in a single array for convenience:
+    //  type can be "snippet", "EA", or "prompt"
+    let itemArray = [];
 
-    window.toggleSidebar = function () {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('hidden');
+    /* ========== UI NAVIGATION ========== */
+    window.showSection = function (sectionId) {
+      // Hide all "section" elements
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      // Also hide the edit form if it's visible
+      document.getElementById('editFormSection').classList.remove('active');
+
+      // Show the requested section
+      const target = document.getElementById(sectionId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      // If needed, load data specifically
+      if (sectionId === 'snippetsSection') {
+        loadAllData(); // We can re-load everything, then only show snippet's result
+        renderSnippets();
+      } else if (sectionId === 'eaSection') {
+        loadAllData();
+        renderEAs();
+      } else if (sectionId === 'promptSection') {
+        loadAllData();
+        renderPrompts();
+      }
     };
 
-    /**
-     * Load both Snippets (from "snippets" collection)
-     * and EA items (from "EA" collection) into snippetArray
-     */
-    async function loadAllSnippets() {
-      snippetArray = [];
+    /* ========== LOAD DATA (SNIPPETS, EA, PROMPT) ========== */
+    async function loadAllData() {
+      itemArray = [];
 
       // Load from "snippets"
       const snippetSnap = await getDocs(collection(db, "snippets"));
       snippetSnap.forEach(docSnap => {
         const data = docSnap.data();
-        snippetArray.push({
+        itemArray.push({
           type: "snippet",
           id: docSnap.id,
           title: data.title || "",
@@ -352,7 +413,7 @@
       const eaSnap = await getDocs(collection(db, "EA"));
       eaSnap.forEach(docSnap => {
         const data = docSnap.data();
-        snippetArray.push({
+        itemArray.push({
           type: "EA",
           id: docSnap.id,
           title: data.title || "",
@@ -363,116 +424,235 @@
         });
       });
 
-      // Update the sidebar
-      updateSidebar();
-    }
-
-    function updateSidebar() {
-      const snippetIndex = document.getElementById('snippetIndex');
-      snippetIndex.innerHTML = "";
-
-      snippetArray.forEach(snippet => {
-        const li = document.createElement('li');
-        const label = snippet.title + (snippet.type === "EA" ? " (EA)" : "");
-
-        // We only show the clickable title in the sidebar
-        li.textContent = label;
-
-        // Clicking the list item shows details in main area
-        li.onclick = () => showSnippetDetail(snippet);
-        snippetIndex.appendChild(li);
+      // Load from "prompt"
+      const promptSnap = await getDocs(collection(db, "prompt"));
+      promptSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        itemArray.push({
+          type: "prompt",
+          id: docSnap.id,
+          title: data.title || "",
+          description: data.description || "",
+          code: data.snippet || "",
+          comments: "",
+          createdAt: data.createdAt
+        });
       });
     }
 
-    /**
-     * Renders the item detail with icons next to the Title
-     */
-    function showSnippetDetail(snippet) {
-      const resultsDiv = document.getElementById('searchResults');
-
-      // Prepare icons next to the title
-      // We'll build a string that includes the icons with onClick calls
-      let iconsHTML = `
-        <span class="icon-buttons">
-          <!-- COPY icon -->
-          <span class="icon-btn" title="Copia il contenuto" onclick="copyItem('${snippet.id}')">📋</span>
-          
-          <!-- EDIT icon -->
-          <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
-          
-          <!-- DELETE icon -->
-          <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
-        </span>
-      `;
-
-      let html = `
-        <h2>
-          ${snippet.title}
-          ${iconsHTML}
-        </h2>
-        <p><em>${snippet.description}</em></p>
-        <pre>${snippet.code}</pre>
-      `;
-
-      // If EA, show comments
-      if (snippet.type === "EA" && snippet.comments) {
-        html += `<p><strong>Commenti:</strong> ${snippet.comments}</p>`;
-      }
-      resultsDiv.innerHTML = html;
-    }
-
-    window.searchLocal = function () {
-      const input = document.getElementById('searchInput').value.trim().toLowerCase();
-      const resultsDiv = document.getElementById('searchResults');
+    /* ========== RENDERING FUNCTIONS ========== */
+    function renderSnippets() {
+      const resultsDiv = document.getElementById('snippetSearchResults');
       resultsDiv.innerHTML = "";
 
-      if (!input) {
-        resultsDiv.innerHTML = "<p>Inserisci una parola chiave per cercare.</p>";
-        return;
-      }
-
-      // Search title, description, code, and comments
-      const filtered = snippetArray.filter(snippet =>
-        snippet.title.toLowerCase().includes(input) ||
-        (snippet.description && snippet.description.toLowerCase().includes(input)) ||
-        (snippet.code && snippet.code.toLowerCase().includes(input)) ||
-        (snippet.comments && snippet.comments.toLowerCase().includes(input))
-      );
-
-      if (filtered.length === 0) {
-        resultsDiv.innerHTML = "<p>Nessun elemento trovato.</p>";
+      // Filter only snippet type
+      const filtered = itemArray.filter(item => item.type === "snippet");
+      if (!filtered.length) {
+        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
         return;
       }
 
       filtered.forEach(snippet => {
-        let iconsHTML = `
-          <span class="icon-buttons">
-            <span class="icon-btn" title="Copia il contenuto" onclick="copyItem('${snippet.id}')">📋</span>
-            <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
-            <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
-          </span>
-        `;
-
-        let html = `
-          <h3>
-            ${snippet.title}
-            ${iconsHTML}
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+          <h3>${snippet.title}
+            <span class="icon-buttons">
+              <span class="icon-btn" title="Copia" onclick="copyItem('${snippet.id}')">📋</span>
+              <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
+              <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
+            </span>
           </h3>
           <p><em>${snippet.description}</em></p>
           <pre>${snippet.code}</pre>
         `;
-        if (snippet.type === "EA" && snippet.comments) {
-          html += `<p><strong>Commenti:</strong> ${snippet.comments}</p>`;
-        }
-        html += "<hr>";
+        resultsDiv.appendChild(div);
+      });
+    }
 
-        const snippetElem = document.createElement('div');
-        snippetElem.innerHTML = html;
-        resultsDiv.appendChild(snippetElem);
+    function renderEAs() {
+      const resultsDiv = document.getElementById('eaSearchResults');
+      resultsDiv.innerHTML = "";
+
+      // Filter only EA type
+      const filtered = itemArray.filter(item => item.type === "EA");
+      if (!filtered.length) {
+        resultsDiv.innerHTML = "<p>Nessun EA trovato.</p>";
+        return;
+      }
+
+      filtered.forEach(ea => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+          <h3>${ea.title}
+            <span class="icon-buttons">
+              <span class="icon-btn" title="Copia" onclick="copyItem('${ea.id}')">📋</span>
+              <span class="icon-btn" title="Modifica" onclick="editItem('${ea.id}')">✏️</span>
+              <span class="icon-btn" title="Elimina" onclick="deleteItem('${ea.id}')">🗑️</span>
+            </span>
+          </h3>
+          <p><em>${ea.description}</em></p>
+          <p><strong>Commenti:</strong> ${ea.comments}</p>
+          <pre>${ea.code}</pre>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    }
+
+    function renderPrompts() {
+      const resultsDiv = document.getElementById('promptSearchResults');
+      resultsDiv.innerHTML = "";
+
+      // Filter only prompt type
+      const filtered = itemArray.filter(item => item.type === "prompt");
+      if (!filtered.length) {
+        resultsDiv.innerHTML = "<p>Nessun Prompt trovato.</p>";
+        return;
+      }
+
+      filtered.forEach(prompt => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+          <h3>${prompt.title}
+            <span class="icon-buttons">
+              <span class="icon-btn" title="Copia" onclick="copyItem('${prompt.id}')">📋</span>
+              <span class="icon-btn" title="Modifica" onclick="editItem('${prompt.id}')">✏️</span>
+              <span class="icon-btn" title="Elimina" onclick="deleteItem('${prompt.id}')">🗑️</span>
+            </span>
+          </h3>
+          <p><em>${prompt.description}</em></p>
+          <pre>${prompt.code}</pre>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    }
+
+    /* ========== SEARCH FUNCTIONS ========== */
+    window.searchLocalSnippets = function() {
+      const input = document.getElementById('snippetSearchInput').value.trim().toLowerCase();
+      const resultsDiv = document.getElementById('snippetSearchResults');
+      resultsDiv.innerHTML = "";
+
+      if (!input) {
+        renderSnippets();
+        return;
+      }
+
+      const filtered = itemArray.filter(item => 
+        item.type === "snippet" &&
+        (item.title.toLowerCase().includes(input) ||
+         (item.description && item.description.toLowerCase().includes(input)) ||
+         (item.code && item.code.toLowerCase().includes(input)))
+      );
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = "<p>Nessun snippet trovato.</p>";
+        return;
+      }
+
+      filtered.forEach(snippet => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+          <h3>${snippet.title}
+            <span class="icon-buttons">
+              <span class="icon-btn" title="Copia" onclick="copyItem('${snippet.id}')">📋</span>
+              <span class="icon-btn" title="Modifica" onclick="editItem('${snippet.id}')">✏️</span>
+              <span class="icon-btn" title="Elimina" onclick="deleteItem('${snippet.id}')">🗑️</span>
+            </span>
+          </h3>
+          <p><em>${snippet.description}</em></p>
+          <pre>${snippet.code}</pre>
+        `;
+        resultsDiv.appendChild(div);
       });
     };
 
-    // The addSnippet() and addEA() remain the same
+    window.searchLocalEA = function() {
+      const input = document.getElementById('eaSearchInput').value.trim().toLowerCase();
+      const resultsDiv = document.getElementById('eaSearchResults');
+      resultsDiv.innerHTML = "";
+
+      if (!input) {
+        renderEAs();
+        return;
+      }
+
+      const filtered = itemArray.filter(item => 
+        item.type === "EA" &&
+        (item.title.toLowerCase().includes(input) ||
+         (item.description && item.description.toLowerCase().includes(input)) ||
+         (item.code && item.code.toLowerCase().includes(input)) ||
+         (item.comments && item.comments.toLowerCase().includes(input)))
+      );
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = "<p>Nessun EA trovato.</p>";
+        return;
+      }
+
+      filtered.forEach(ea => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+          <h3>${ea.title}
+            <span class="icon-buttons">
+              <span class="icon-btn" title="Copia" onclick="copyItem('${ea.id}')">📋</span>
+              <span class="icon-btn" title="Modifica" onclick="editItem('${ea.id}')">✏️</span>
+              <span class="icon-btn" title="Elimina" onclick="deleteItem('${ea.id}')">🗑️</span>
+            </span>
+          </h3>
+          <p><em>${ea.description}</em></p>
+          <p><strong>Commenti:</strong> ${ea.comments}</p>
+          <pre>${ea.code}</pre>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    };
+
+    window.searchLocalPrompt = function() {
+      const input = document.getElementById('promptSearchInput').value.trim().toLowerCase();
+      const resultsDiv = document.getElementById('promptSearchResults');
+      resultsDiv.innerHTML = "";
+
+      if (!input) {
+        renderPrompts();
+        return;
+      }
+
+      const filtered = itemArray.filter(item => 
+        item.type === "prompt" &&
+        (item.title.toLowerCase().includes(input) ||
+         (item.description && item.description.toLowerCase().includes(input)) ||
+         (item.code && item.code.toLowerCase().includes(input)))
+      );
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = "<p>Nessun Prompt trovato.</p>";
+        return;
+      }
+
+      filtered.forEach(prompt => {
+        const div = document.createElement('div');
+        div.classList.add('item');
+        div.innerHTML = `
+          <h3>${prompt.title}
+            <span class="icon-buttons">
+              <span class="icon-btn" title="Copia" onclick="copyItem('${prompt.id}')">📋</span>
+              <span class="icon-btn" title="Modifica" onclick="editItem('${prompt.id}')">✏️</span>
+              <span class="icon-btn" title="Elimina" onclick="deleteItem('${prompt.id}')">🗑️</span>
+            </span>
+          </h3>
+          <p><em>${prompt.description}</em></p>
+          <pre>${prompt.code}</pre>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    };
+
+    /* ========== ADD NEW ITEMS ========== */
     window.addSnippet = async function () {
       const titleField = document.getElementById('title');
       const descriptionField = document.getElementById('description');
@@ -501,7 +681,10 @@
         titleField.value = "";
         descriptionField.value = "";
         codeField.value = "";
-        await loadAllSnippets();
+
+        await loadAllData();
+        renderSnippets();
+
       } catch (err) {
         console.error("Errore durante il salvataggio:", err);
         infoAdd.style.color = "red";
@@ -541,7 +724,10 @@
         eaDescriptionField.value = "";
         eaCommentsField.value = "";
         eaSnippetField.value = "";
-        await loadAllSnippets();
+
+        await loadAllData();
+        renderEAs();
+
       } catch (err) {
         console.error("Errore durante il salvataggio EA:", err);
         infoEAAdd.style.color = "red";
@@ -549,21 +735,55 @@
       }
     };
 
-    /**
-     * Return the snippet object from snippetArray by ID
-     */
-    function getSnippetById(id) {
-      return snippetArray.find(item => item.id === id);
+    window.addPrompt = async function () {
+      const promptTitleField = document.getElementById('promptTitle');
+      const promptDescriptionField = document.getElementById('promptDescription');
+      const promptSnippetField = document.getElementById('promptSnippet');
+      const infoPromptAdd = document.getElementById('infoPromptAdd');
+
+      const pTitle = promptTitleField.value.trim();
+      const pDescription = promptDescriptionField.value.trim();
+      const pSnippet = promptSnippetField.value.trim();
+
+      if (!pTitle || !pSnippet) {
+        infoPromptAdd.style.color = "red";
+        infoPromptAdd.textContent = "Inserisci almeno un titolo e un contenuto di prompt!";
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "prompt"), {
+          title: pTitle,
+          description: pDescription,
+          snippet: pSnippet,
+          createdAt: new Date(),
+        });
+        infoPromptAdd.style.color = "green";
+        infoPromptAdd.textContent = "Prompt salvato con successo!";
+        promptTitleField.value = "";
+        promptDescriptionField.value = "";
+        promptSnippetField.value = "";
+
+        await loadAllData();
+        renderPrompts();
+
+      } catch (err) {
+        console.error("Errore durante il salvataggio Prompt:", err);
+        infoPromptAdd.style.color = "red";
+        infoPromptAdd.textContent = "Errore durante il salvataggio Prompt!";
+      }
+    };
+
+    /* ========== COPY / EDIT / DELETE ========== */
+    function getItemById(id) {
+      return itemArray.find(x => x.id === id);
     }
 
-    /**
-     * COPY the snippet.code to the clipboard
-     */
-    window.copyItem = function(snippetId) {
-      const snippet = getSnippetById(snippetId);
-      if (!snippet) return;
+    window.copyItem = function(itemId) {
+      const item = getItemById(itemId);
+      if (!item) return;
 
-      navigator.clipboard.writeText(snippet.code)
+      navigator.clipboard.writeText(item.code || "")
         .then(() => {
           alert("Codice copiato negli appunti!");
         })
@@ -572,38 +792,33 @@
         });
     };
 
-    /**
-     * EDIT an item (snippet or EA)
-     * Fill the hidden fields and show the edit form
-     */
-    window.editItem = function(snippetId) {
-      const snippet = getSnippetById(snippetId);
-      if (!snippet) return;
-
-      document.getElementById('editId').value = snippet.id;
-      document.getElementById('editType').value = snippet.type;
-
-      // Fill visible fields
-      document.getElementById('editTitle').value = snippet.title;
-      document.getElementById('editDescription').value = snippet.description;
-      document.getElementById('editCode').value = snippet.code;
-      document.getElementById('editComments').value = snippet.comments || "";
-
-      // If snippet.type is EA, show the comments group
-      const editCommentsGroup = document.getElementById('editCommentsGroup');
-      if (snippet.type === "EA") {
-        editCommentsGroup.classList.remove('hidden');
-      } else {
-        editCommentsGroup.classList.add('hidden');
-      }
+    window.editItem = function(itemId) {
+      const item = getItemById(itemId);
+      if (!item) return;
 
       // Show the edit form
-      toggleFormSection('editFormSection');
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById('editFormSection').classList.add('active');
+
+      // Fill hidden fields
+      document.getElementById('editId').value = item.id;
+      document.getElementById('editType').value = item.type;
+
+      // Fill visible fields
+      document.getElementById('editTitle').value = item.title;
+      document.getElementById('editDescription').value = item.description;
+      document.getElementById('editCode').value = item.code;
+      document.getElementById('editComments').value = item.comments || "";
+
+      // Show comments only if EA
+      const editCommentsGroup = document.getElementById('editCommentsGroup');
+      if (item.type === "EA") {
+        editCommentsGroup.style.display = "block";
+      } else {
+        editCommentsGroup.style.display = "none";
+      }
     };
 
-    /**
-     * SAVE edits to Firestore (for snippet or EA)
-     */
     window.saveEdits = async function() {
       const infoEdit = document.getElementById('infoEdit');
       const editId = document.getElementById('editId').value;
@@ -626,23 +841,28 @@
             description: newDescription,
             code: newCode
           });
-        } else {
+        } else if (editType === "EA") {
           await updateDoc(doc(db, "EA", editId), {
             title: newTitle,
             description: newDescription,
             snippet: newCode,
             comments: newComments
           });
+        } else if (editType === "prompt") {
+          await updateDoc(doc(db, "prompt", editId), {
+            title: newTitle,
+            description: newDescription,
+            snippet: newCode
+          });
         }
+
         infoEdit.style.color = "green";
         infoEdit.textContent = "Modifica salvata con successo!";
-
-        // Reload the data
-        await loadAllSnippets();
+        await loadAllData();
 
         // Hide the edit form after a short delay
         setTimeout(() => {
-          toggleFormSection('editFormSection'); 
+          document.getElementById('editFormSection').classList.remove('active');
           infoEdit.textContent = "";
         }, 800);
 
@@ -653,40 +873,38 @@
       }
     };
 
-    /**
-     * DELETE an item (snippet or EA)
-     */
-    window.deleteItem = async function(snippetId) {
-      const snippet = getSnippetById(snippetId);
-      if (!snippet) return;
+    window.deleteItem = async function(itemId) {
+      const item = getItemById(itemId);
+      if (!item) return;
 
       const confirmDelete = confirm("Sei sicuro di voler eliminare?");
       if (!confirmDelete) return;
 
       try {
-        if (snippet.type === "EA") {
-          await deleteDoc(doc(db, "EA", snippet.id));
-        } else {
-          await deleteDoc(doc(db, "snippets", snippet.id));
+        if (item.type === "snippet") {
+          await deleteDoc(doc(db, "snippets", item.id));
+        } else if (item.type === "EA") {
+          await deleteDoc(doc(db, "EA", item.id));
+        } else if (item.type === "prompt") {
+          await deleteDoc(doc(db, "prompt", item.id));
         }
         alert("Elemento eliminato con successo!");
-        await loadAllSnippets();
+        await loadAllData();
+
+        // If you're in the snippet section, re-render
+        if (item.type === 'snippet') renderSnippets();
+        else if (item.type === 'EA') renderEAs();
+        else renderPrompts();
+
       } catch (err) {
         console.error("Errore durante l'eliminazione:", err);
         alert("Errore durante l'eliminazione!");
       }
     };
 
-    // Show/hide form sections
-    window.toggleFormSection = function(formSectionId) {
-      const section = document.getElementById(formSectionId);
-      section.classList.toggle('hidden');
-    };
-
-    // Initial load
-    (async function start() {
-      await loadAllSnippets();
-    })();
+    // INITIAL LOAD (nothing shown until user clicks a section)
+    // If you want to show Snippets by default, uncomment the line below:
+    // showSection('snippetsSection');
   </script>
 </body>
 </html>
