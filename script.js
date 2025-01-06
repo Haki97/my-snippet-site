@@ -1,113 +1,161 @@
-import com.google.api.core.ApiFuture;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.*;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
-public class FirebaseSnippetManager {
-    private static Firestore db;
+/**
+ * A simple manager for three item types: Snippet, EA, and Prompt.
+ * In a real app, you'd link it to Firestore or a database.
+ */
+public class LibraryManager {
+    
+    private final List<Snippet> snippetList;
+    private final List<EA> eaList;
+    private final List<PromptItem> promptList;
 
-    public static void main(String[] args) {
-        try {
-            // Initialize Firebase
-            initializeFirebase();
+    public LibraryManager() {
+        snippetList = new ArrayList<>();
+        eaList = new ArrayList<>();
+        promptList = new ArrayList<>();
+    }
 
-            // Load all snippets
-            System.out.println("Loading all snippets...");
-            List<QueryDocumentSnapshot> snippets = getAllSnippets();
-            for (QueryDocumentSnapshot snippet : snippets) {
-                displaySnippet(snippet);
-            }
+    public static class Snippet {
+        private String id;
+        private String title;
+        private String description;
+        private String code;
 
-            // Add a new snippet
-            System.out.println("\nAdding a new snippet...");
-            String snippetId = addSnippet("New Title", "New Description", "New Code");
-            System.out.println("Snippet added with ID: " + snippetId);
-
-            // (EXAMPLE) Add a new EA
-            System.out.println("\nAdding a new EA...");
-            String eaId = addEA("EA Title", "EA Description", "EA Comments", "EA Snippet code here");
-            System.out.println("EA added with ID: " + eaId);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        // Constructors
+        public Snippet() {}
+        public Snippet(String id, String title, String description, String code) {
+            this.id = id;
+            this.title = title;
+            this.description = description;
+            this.code = code;
         }
+
+        // Getters and Setters
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        public String getCode() { return code; }
+        public void setCode(String code) { this.code = code; }
     }
 
-    /**
-     * Initialize Firebase Firestore using the Admin SDK.
-     */
-    private static void initializeFirebase() throws IOException {
-        // Load the service account key JSON file
-        FileInputStream serviceAccount = new FileInputStream("path/to/serviceAccountKey.json");
+    public static class EA {
+        private String id;
+        private String title;
+        private String description;
+        private String comments;
+        private String snippet;
 
-        FirebaseOptions options = new FirebaseOptions.Builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setProjectId("my-snippet-project-a84b5")
-                .build();
+        // Constructors
+        public EA() {}
+        public EA(String id, String title, String description, String comments, String snippet) {
+            this.id = id;
+            this.title = title;
+            this.description = description;
+            this.comments = comments;
+            this.snippet = snippet;
+        }
 
-        FirebaseApp.initializeApp(options);
-        db = FirestoreClient.getFirestore();
-        System.out.println("Firebase initialized successfully.");
+        // Getters and Setters
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        public String getComments() { return comments; }
+        public void setComments(String comments) { this.comments = comments; }
+        public String getSnippet() { return snippet; }
+        public void setSnippet(String snippet) { this.snippet = snippet; }
     }
 
-    /**
-     * Retrieve all snippets from Firestore.
-     */
-    private static List<QueryDocumentSnapshot> getAllSnippets() throws ExecutionException, InterruptedException {
-        ApiFuture<QuerySnapshot> future = db.collection("snippets").get();
-        QuerySnapshot snapshot = future.get();
-        return snapshot.getDocuments();
+    public static class PromptItem {
+        private String id;
+        private String title;
+        private String description;
+        private String snippet; // The text or content of the prompt
+
+        public PromptItem() {}
+        public PromptItem(String id, String title, String description, String snippet) {
+            this.id = id;
+            this.title = title;
+            this.description = description;
+            this.snippet = snippet;
+        }
+
+        // Getters and Setters
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        public String getSnippet() { return snippet; }
+        public void setSnippet(String snippet) { this.snippet = snippet; }
     }
 
-    /**
-     * Add a new snippet to Firestore.
-     */
-    private static String addSnippet(String title, String description, String code)
-            throws ExecutionException, InterruptedException {
-        Map<String, Object> snippet = new HashMap<>();
-        snippet.put("title", title);
-        snippet.put("description", description);
-        snippet.put("code", code);
-        snippet.put("createdAt", System.currentTimeMillis());
-
-        ApiFuture<DocumentReference> future = db.collection("snippets").add(snippet);
-        return future.get().getId();
+    // Adders
+    public void addSnippet(Snippet s) {
+        snippetList.add(s);
+    }
+    public void addEA(EA e) {
+        eaList.add(e);
+    }
+    public void addPrompt(PromptItem p) {
+        promptList.add(p);
     }
 
-    /**
-     * Add a new EA to Firestore.
-     */
-    private static String addEA(String title, String description, String comments, String snippet)
-            throws ExecutionException, InterruptedException {
-        Map<String, Object> eaDoc = new HashMap<>();
-        eaDoc.put("title", title);
-        eaDoc.put("description", description);
-        eaDoc.put("comments", comments);
-        eaDoc.put("snippet", snippet);
-        eaDoc.put("createdAt", System.currentTimeMillis());
-
-        // We'll store these documents in a collection called "EA"
-        ApiFuture<DocumentReference> future = db.collection("EA").add(eaDoc);
-        return future.get().getId();
+    // Retrievers
+    public List<Snippet> getAllSnippets() {
+        return snippetList;
+    }
+    public List<EA> getAllEA() {
+        return eaList;
+    }
+    public List<PromptItem> getAllPrompts() {
+        return promptList;
     }
 
-    /**
-     * Display a single snippet's details.
-     */
-    private static void displaySnippet(QueryDocumentSnapshot snippet) {
-        System.out.println("Snippet ID: " + snippet.getId());
-        System.out.println("Title: " + snippet.getString("title"));
-        System.out.println("Description: " + snippet.getString("description"));
-        System.out.println("Code: " + snippet.getString("code"));
-        System.out.println("Created At: " + snippet.get("createdAt"));
-        System.out.println("-----------------------------");
+    // Example main test
+    public static void main(String[] args) {
+        LibraryManager manager = new LibraryManager();
+
+        // Add some sample items
+        manager.addSnippet(new Snippet("snip1", "Reverse Array", "Reverses an array", "function reverseArray(arr){ return arr.reverse(); }"));
+        manager.addEA(new EA("ea1", "EA Title", "EA Desc", "Some Comments", "EA snippet code"));
+        manager.addPrompt(new PromptItem("prompt1", "Prompt Title", "Short desc", "Explain how to optimize an algorithm"));
+
+        // Print them
+        System.out.println("=== SNIPPETS ===");
+        for (Snippet s : manager.getAllSnippets()) {
+            System.out.println("ID: " + s.getId());
+            System.out.println("Title: " + s.getTitle());
+            System.out.println("Description: " + s.getDescription());
+            System.out.println("Code: " + s.getCode());
+            System.out.println("----");
+        }
+
+        System.out.println("\n=== EA ===");
+        for (EA e : manager.getAllEA()) {
+            System.out.println("ID: " + e.getId());
+            System.out.println("Title: " + e.getTitle());
+            System.out.println("Description: " + e.getDescription());
+            System.out.println("Comments: " + e.getComments());
+            System.out.println("Snippet: " + e.getSnippet());
+            System.out.println("----");
+        }
+
+        System.out.println("\n=== PROMPTS ===");
+        for (PromptItem p : manager.getAllPrompts()) {
+            System.out.println("ID: " + p.getId());
+            System.out.println("Title: " + p.getTitle());
+            System.out.println("Description: " + p.getDescription());
+            System.out.println("Content: " + p.getSnippet());
+            System.out.println("----");
+        }
     }
 }
