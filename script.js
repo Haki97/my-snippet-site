@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -22,8 +24,8 @@ public class LibraryManager {
         private String code;
         private Date createdAt;
 
-        // Constructors
         public Snippet() {}
+
         public Snippet(String id, String title, String description, String code, Date createdAt) {
             this.id = id;
             this.title = title;
@@ -54,6 +56,7 @@ public class LibraryManager {
         private Date createdAt;
 
         public EA() {}
+
         public EA(String id, String title, String description, String comments, String snippet, Date createdAt) {
             this.id = id;
             this.title = title;
@@ -86,6 +89,7 @@ public class LibraryManager {
         private Date createdAt;
 
         public PromptItem() {}
+
         public PromptItem(String id, String title, String description, String snippet, Date createdAt) {
             this.id = id;
             this.title = title;
@@ -118,55 +122,59 @@ public class LibraryManager {
         promptList.add(prompt);
     }
 
-    // Basic getAll methods
+    // Basic getAll methods, returning alphabetically sorted items
     public List<Snippet> getAllSnippets() {
-        return snippetList;
+        List<Snippet> sorted = new ArrayList<>(snippetList);
+        Collections.sort(sorted, Comparator.comparing(s -> s.getTitle().toLowerCase()));
+        return sorted;
     }
+
     public List<EA> getAllEA() {
-        return eaList;
+        List<EA> sorted = new ArrayList<>(eaList);
+        Collections.sort(sorted, Comparator.comparing(e -> e.getTitle().toLowerCase()));
+        return sorted;
     }
+
     public List<PromptItem> getAllPrompts() {
-        return promptList;
+        List<PromptItem> sorted = new ArrayList<>(promptList);
+        Collections.sort(sorted, Comparator.comparing(p -> p.getTitle().toLowerCase()));
+        return sorted;
     }
 
     // Sample test
     public static void main(String[] args) {
         LibraryManager manager = new LibraryManager();
-        
+
         // Add sample items
-        manager.addSnippet(new Snippet("snip1", "Reverse Array", "Reverse an array in JS", "function reverse(arr){ return arr.reverse(); }", new Date()));
-        manager.addEA(new EA("ea1", "EA Title", "EA Desc", "Some Comments", "EA snippet code", new Date()));
-        manager.addPrompt(new PromptItem("prompt1", "Prompt Title", "Short desc", "Describe an optimization technique.", new Date()));
+        manager.addSnippet(new Snippet("snip1", "Z-Array Reverse", "Reverses an array in JS", "function reverse(arr){ return arr.reverse(); }", new Date()));
+        manager.addSnippet(new Snippet("snip2", "A-Print Hello", "Print 'Hello World'", "System.out.println(\"Hello World\");", new Date()));
+
+        manager.addEA(new EA("ea1", "Z-EA Title", "EA Desc", "Some Comments", "EA snippet code", new Date()));
+        manager.addEA(new EA("ea2", "A-EA Title", "Another EA Desc", "More Comments", "EA snippet code 2", new Date()));
+
+        manager.addPrompt(new PromptItem("prompt1", "Z-Prompt Title", "Prompt Desc", "Write a short story...", new Date()));
+        manager.addPrompt(new PromptItem("prompt2", "A-Prompt Title", "Another Prompt Desc", "Explain a BFS vs DFS approach...", new Date()));
 
         // Print them
-        System.out.println("=== SNIPPETS ===");
+        System.out.println("=== SNIPPETS (alphabetical) ===");
         for (Snippet s : manager.getAllSnippets()) {
-            System.out.println("ID: " + s.getId());
             System.out.println("Title: " + s.getTitle());
-            System.out.println("CreatedAt: " + s.getCreatedAt());
             System.out.println("Code: " + s.getCode());
-            System.out.println("----");
+            System.out.println("---");
         }
 
-        System.out.println("\n=== EA ===");
+        System.out.println("\n=== EA (alphabetical) ===");
         for (EA e : manager.getAllEA()) {
-            System.out.println("ID: " + e.getId());
             System.out.println("Title: " + e.getTitle());
-            System.out.println("Description: " + e.getDescription());
-            System.out.println("Comments: " + e.getComments());
             System.out.println("Snippet: " + e.getSnippet());
-            System.out.println("CreatedAt: " + e.getCreatedAt());
-            System.out.println("----");
+            System.out.println("---");
         }
 
-        System.out.println("\n=== PROMPTS ===");
+        System.out.println("\n=== PROMPTS (alphabetical) ===");
         for (PromptItem p : manager.getAllPrompts()) {
-            System.out.println("ID: " + p.getId());
             System.out.println("Title: " + p.getTitle());
-            System.out.println("Description: " + p.getDescription());
             System.out.println("Snippet: " + p.getSnippet());
-            System.out.println("CreatedAt: " + p.getCreatedAt());
-            System.out.println("----");
+            System.out.println("---");
         }
     }
 }
