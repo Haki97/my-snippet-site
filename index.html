@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>My Advanced Snippet App (Pop-up Version)</title>
+  <title>My Advanced Snippet App (Alphabetical + Scrollable Pop-up)</title>
   <style>
     /* Basic reset */
     * {
@@ -74,8 +74,8 @@
       border: 1px solid #ddd;
       border-radius: 6px;
       padding: 1rem;
-      overflow-y: auto; /* in case list is long */
-      max-height: calc(100vh - 200px); /* to keep the index scrollable */
+      overflow-y: auto; /* scroll if list is long */
+      max-height: calc(100vh - 200px); /* keep the index scrollable */
     }
     .index-list h2 {
       margin-bottom: 0.5rem;
@@ -203,11 +203,13 @@
     }
     .modal-content {
       background: #fff;
-      padding: 1.5rem;
-      border-radius: 8px;
+      padding: 1rem; /* reduced padding */
+      border-radius: 4px; /* reduced border-radius */
       width: 500px;
       max-width: 90%;
       position: relative;
+      max-height: 80vh; /* limit height to enable scrolling */
+      overflow-y: auto; /* scroll up/down for long text */
     }
     .modal-close-btn {
       position: absolute;
@@ -266,11 +268,11 @@
 
     <!-- Right content area with index + main panel -->
     <div class="content">
-      <!-- Index of items (most recent first) -->
+      <!-- Index of items (alphabetical) -->
       <div class="index-list">
         <h2 id="indexTitle">Index</h2>
         <div id="indexContainer">
-          <!-- List of items goes here, sorted by creation date desc -->
+          <!-- List of items goes here, sorted alphabetically by title -->
         </div>
       </div>
 
@@ -414,7 +416,6 @@
       // Re-load items from Firestore & re-render index + any relevant content
       loadAllData().then(() => {
         renderIndex(); 
-        // Optionally re-render the specific list if needed (like search results)
         if (sectionId === 'snippetsSection') searchLocalSnippets(true);
         if (sectionId === 'eaSection') searchLocalEA(true);
         if (sectionId === 'promptSection') searchLocalPrompt(true);
@@ -470,8 +471,8 @@
         });
       });
 
-      // Sort by createdAt descending
-      itemArray.sort((a, b) => b.createdAt - a.createdAt);
+      // Sort ALPHABETICALLY by title
+      itemArray.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
     }
 
     /* ========== RENDER INDEX (LEFT LIST) ========== */
@@ -479,7 +480,7 @@
       const container = document.getElementById('indexContainer');
       container.innerHTML = "";
 
-      // Filter items based on active section
+      // Find which section is active
       const activeSection = document.querySelector('.section.active');
       if (!activeSection) {
         container.innerHTML = "<p class='no-items'>Nessuna sezione selezionata.</p>";
@@ -514,7 +515,7 @@
       const modal = document.getElementById('itemModal');
       const content = document.getElementById('itemModalContent');
 
-      // Clear existing content (except close button)
+      // Reset (but keep close button)
       content.innerHTML = `<button class="modal-close-btn" onclick="closeModal()">X</button>`; 
 
       // Build new content
@@ -540,10 +541,8 @@
 
       html += `<pre>${item.code}</pre>`;
 
-      // Insert
       content.innerHTML += html;
 
-      // Show the modal
       modal.classList.add('active');
     }
 
@@ -553,17 +552,10 @@
     };
 
     /* ========== SEARCH FUNCTIONS ========== */
-    // We re-use the existing itemArray, but only show results in the console or do minimal feedback.
-    // The main difference: now the actual detail is in the pop-up, so we won't render them in the main panel.
-
-    // "Immediate" means we skip re-rendering the detail list between searches, we only update the index
     function searchLocalSnippets(immediate=false) {
       const input = document.getElementById('snippetSearchInput').value.trim().toLowerCase();
-      // If immediate, just re-render the index:
-      renderIndex(); 
-      if (!input) return; // no filter
-      // We can filter itemArray or highlight in the index...
-      // For simplicity, let's highlight or remove items not matching:
+      renderIndex();
+      if (!input) return;
       filterIndex("snippet", input);
     }
 
@@ -737,21 +729,18 @@
       if (!item) return;
       closeModal(); // close the viewing modal
 
-      // We can re-use the same approach from your previous code or open another small modal for editing.
-      // For clarity, let's just do a prompt-based edit. 
-      // (You can implement a separate "edit" modal if you wish.)
-
+      // For simplicity, let's do a prompt-based edit
       const newTitle = prompt("Nuovo Titolo:", item.title);
-      if (newTitle === null) return; // user cancelled
+      if (newTitle === null) return;
       const newDescription = prompt("Nuova Descrizione:", item.description);
       if (newDescription === null) return;
       let newComments = item.comments || "";
       let newCode = item.code;
+
       if (item.type === "EA") {
         newComments = prompt("Nuovi Commenti (EA):", item.comments);
         if (newComments === null) return;
       }
-
       newCode = prompt("Nuovo Codice/Snippet:", item.code);
       if (newCode === null) return;
 
@@ -761,6 +750,7 @@
         return;
       }
 
+      // Update in Firestore
       if (item.type === 'snippet') {
         updateDoc(doc(db, "snippets", item.id), {
           title: newTitle,
@@ -817,8 +807,7 @@
       }
     };
 
-    // Start with an empty UI until a user clicks a section
-    // If you want to open Snippets by default, uncomment:
+    // Optional: If you want to open Snippets by default, uncomment:
     // showSection('snippetsSection');
   </script>
 </body>
